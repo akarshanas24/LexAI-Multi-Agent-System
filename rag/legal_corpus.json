@@ -1,0 +1,128 @@
+[
+  {
+    "title": "Contract Law Fundamentals",
+    "citation": "Restatement (Second) of Contracts",
+    "content": "Contract disputes turn on offer, acceptance, consideration, performance, breach, mitigation, and provable damages. Courts often compare the promised deliverable against what was actually delivered and whether the non-breaching party contributed to delay.",
+    "keywords": ["contract", "breach", "payment", "consideration", "damages", "mitigation", "deadline"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Material Breach and Substantial Performance",
+    "citation": "Common Law Contract Remedies",
+    "content": "A material breach is a failure serious enough to defeat the essential purpose of the agreement. By contrast, substantial performance may allow partial recovery when the core obligation was largely completed and remaining defects can be compensated through damages.",
+    "keywords": ["material", "breach", "substantial", "performance", "contractor", "delay", "defect"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Trade Secret Misappropriation",
+    "citation": "Uniform Trade Secrets Act",
+    "content": "Trade secret claims examine whether the information had independent economic value from secrecy, whether reasonable secrecy measures were used, and whether acquisition or use was improper. Source code, proprietary models, and confidential workflows are common examples.",
+    "keywords": ["trade", "secret", "code", "confidential", "misappropriation", "developer", "competitor"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Confidential Information and Non-Disclosure Duties",
+    "citation": "Employment and Confidentiality Agreements",
+    "content": "Confidentiality disputes often turn on the scope of the agreement, the employer's handling of sensitive material, access restrictions, and whether the challenged information was already public or independently developed. Audit logs and repository access records can be important evidence.",
+    "keywords": ["nda", "confidentiality", "agreement", "repository", "access", "independent", "public"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Wrongful Termination and Retaliation",
+    "citation": "Employment Retaliation Doctrine",
+    "content": "Employment retaliation disputes focus on protected activity, employer knowledge, temporal proximity, prior performance documentation, and whether the stated reason for termination is pretextual. Whistleblower complaints and internal reports can become central evidence.",
+    "keywords": ["employee", "termination", "retaliation", "whistleblower", "performance", "employer"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Workplace Investigation and Due Process",
+    "citation": "Internal Disciplinary Procedure Principles",
+    "content": "When an employer disciplines or dismisses a worker after alleged misconduct, decision makers often assess whether there was notice of the allegations, an opportunity to respond, consistent treatment of comparable employees, and adequate factual investigation before termination.",
+    "keywords": ["discipline", "termination", "investigation", "notice", "response", "misconduct", "due-process"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Fraud and Financial Misrepresentation",
+    "citation": "Common Law Fraud",
+    "content": "Fraud claims generally require a material misrepresentation, knowledge of falsity, intent to induce reliance, actual reliance, causation, and measurable damages. Written statements, omitted facts, and advisor communications can all be relevant.",
+    "keywords": ["fraud", "financial", "advisor", "misrepresentation", "reliance", "damages", "investor"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Securities-Style Disclosure Duties",
+    "citation": "Investor Protection Principles",
+    "content": "Investment and advisory disputes often examine whether material risks were disclosed, whether statements about returns or safety were misleading, and whether a fiduciary or advisory relationship created heightened duties of candor and care.",
+    "keywords": ["investor", "disclosure", "risk", "fiduciary", "returns", "advisor", "securities"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Criminal Burden of Proof",
+    "citation": "Due Process Standard",
+    "content": "In criminal-style adjudication, the prosecution must prove guilt beyond a reasonable doubt. Conflicting testimony, broken chains of custody, weak identification evidence, and alternative explanations all reduce confidence in conviction.",
+    "keywords": ["criminal", "reasonable", "doubt", "evidence", "prosecution", "guilty", "identification"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Civil Burden of Proof",
+    "citation": "Preponderance of the Evidence",
+    "content": "In civil disputes, the plaintiff typically prevails by showing that its version of events is more likely than not. Documentary consistency, contemporaneous records, and credible witness accounts often outweigh speculation.",
+    "keywords": ["civil", "preponderance", "plaintiff", "liable", "records", "witness", "damages"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Circumstantial Evidence and Inference",
+    "citation": "Evidence Evaluation Principles",
+    "content": "Courts may rely on circumstantial evidence when it supports a reasonable inference, but they often compare competing explanations and assess whether the inference is stronger than innocent alternatives. Digital traces, timestamps, and unusual access patterns can be highly probative.",
+    "keywords": ["circumstantial", "inference", "digital", "timestamp", "access", "evidence", "alternative"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Electronic Records and Authentication",
+    "citation": "Digital Evidence Principles",
+    "content": "Emails, chats, logs, and system records usually require authentication showing they are what the offering party claims. Metadata, custodial testimony, hashing, and chain-of-custody practices strengthen admissibility and reliability.",
+    "keywords": ["electronic", "email", "chat", "log", "metadata", "authentication", "chain-of-custody"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Search, Seizure, and Privacy Interests",
+    "citation": "Constitutional Privacy and Search Principles",
+    "content": "Government access to private spaces, devices, or communications can trigger scrutiny over reasonable expectation of privacy, consent, warrants, and the scope of authorized searches. Evidence obtained through unlawful intrusion may face exclusion challenges in some settings.",
+    "keywords": ["search", "seizure", "privacy", "warrant", "consent", "device", "communications"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Procedural Fairness in Adjudication",
+    "citation": "Natural Justice and Fair Hearing Principles",
+    "content": "Fair adjudication usually requires notice, a meaningful chance to respond, an impartial decision maker, and reasoning connected to the evidence. A decision that ignores major arguments or rests on undisclosed material may face appellate or review challenges.",
+    "keywords": ["procedural", "fairness", "notice", "hearing", "impartial", "reasoning", "appeal"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Negligence and Duty of Care",
+    "citation": "General Tort Principles",
+    "content": "Negligence claims ask whether a duty of care existed, whether the defendant breached the applicable standard of care, whether that breach caused the harm, and whether damages were reasonably foreseeable. Industry practices and expert evidence often help define the standard.",
+    "keywords": ["negligence", "duty", "care", "breach", "causation", "foreseeable", "tort"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Defamation and Reputation Harm",
+    "citation": "Defamation Principles",
+    "content": "Defamation disputes focus on whether a false factual statement was published to others, whether it injured reputation, and whether defenses such as truth, privilege, or opinion apply. Public-figure cases may impose additional fault requirements.",
+    "keywords": ["defamation", "reputation", "false", "publication", "truth", "privilege", "opinion"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Consumer Protection and Unfair Practices",
+    "citation": "Consumer Protection Principles",
+    "content": "Consumer protection disputes often examine unfair trade practices, deceptive marketing, hidden charges, and unequal bargaining power. Remedies may include refunds, statutory damages, injunctions, and corrective disclosures.",
+    "keywords": ["consumer", "deceptive", "marketing", "refund", "charges", "unfair", "statutory"],
+    "source": "legal_corpus.json"
+  },
+  {
+    "title": "Intellectual Property and Ownership of Work Product",
+    "citation": "Copyright and Work-for-Hire Principles",
+    "content": "Ownership disputes over creative or technical work often depend on authorship, assignment clauses, employment status, and whether the work was created within the scope of employment or commissioned under valid written terms.",
+    "keywords": ["copyright", "ownership", "work-product", "assignment", "employment", "scope", "commissioned"],
+    "source": "legal_corpus.json"
+  }
+]
