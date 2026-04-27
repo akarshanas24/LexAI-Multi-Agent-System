@@ -18,25 +18,45 @@ try:
         format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
         level="DEBUG",
     )
-    logger.add(
+    def _add_file_sink(path: str, *, level: str, rotation: str, retention: str, fmt: str, **extra):
+        try:
+            logger.add(
+                path,
+                rotation=rotation,
+                retention=retention,
+                compression="zip",
+                format=fmt,
+                level=level,
+                enqueue=True,
+                **extra,
+            )
+        except PermissionError:
+            logger.add(
+                path,
+                rotation=rotation,
+                retention=retention,
+                compression="zip",
+                format=fmt,
+                level=level,
+                enqueue=False,
+                **extra,
+            )
+
+    _add_file_sink(
         "logs/lexai.log",
         rotation="10 MB",
         retention="7 days",
-        compression="zip",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | {message}",
+        fmt="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | {message}",
         level="INFO",
-        enqueue=True,
     )
-    logger.add(
+    _add_file_sink(
         "logs/errors.log",
         rotation="5 MB",
         retention="14 days",
-        compression="zip",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | {message}\n{exception}",
+        fmt="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | {message}\n{exception}",
         level="ERROR",
         backtrace=True,
         diagnose=True,
-        enqueue=True,
     )
 except ModuleNotFoundError:  # pragma: no cover
     logging.basicConfig(

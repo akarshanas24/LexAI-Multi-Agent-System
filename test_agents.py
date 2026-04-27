@@ -11,7 +11,7 @@ class TestJudgeAgent:
         agent = JudgeAgent()
         mock = json.dumps({"ruling":"Liable","confidence":75,"reasoning":"Evidence supports liability.","key_finding":"Files retained."})
         with patch.object(agent, "run", AsyncMock(return_value=mock)):
-            v = await agent.run_structured("case","defense","prosecution")
+            v = await agent.run_structured("case","research","defense","prosecution", {"defense_score": 50, "prosecution_score": 50})
         assert v["ruling"] == "Liable"
         assert v["confidence"] == 75
 
@@ -19,7 +19,7 @@ class TestJudgeAgent:
         from agents.judge_agent import JudgeAgent
         agent = JudgeAgent()
         with patch.object(agent, "run", AsyncMock(return_value="NOT JSON")):
-            v = await agent.run_structured("case","defense","prosecution")
+            v = await agent.run_structured("case","research","defense","prosecution", {"defense_score": 50, "prosecution_score": 50})
         assert v["ruling"] == "Undetermined"
 
     async def test_strips_markdown_fences(self):
@@ -27,7 +27,7 @@ class TestJudgeAgent:
         agent = JudgeAgent()
         wrapped = '```json\n{"ruling":"Not Guilty","confidence":60,"reasoning":"Doubt.","key_finding":"No evidence."}\n```'
         with patch.object(agent, "run", AsyncMock(return_value=wrapped)):
-            v = await agent.run_structured("case","d","p")
+            v = await agent.run_structured("case","research","d","p", {"defense_score": 50, "prosecution_score": 50})
         assert v["ruling"] == "Not Guilty"
 
     async def test_confidence_coerced_to_int(self):
@@ -35,7 +35,7 @@ class TestJudgeAgent:
         agent = JudgeAgent()
         mock = json.dumps({"ruling":"Liable","confidence":"82.5","reasoning":"...","key_finding":"..."})
         with patch.object(agent, "run", AsyncMock(return_value=mock)):
-            v = await agent.run_structured("case","d","p")
+            v = await agent.run_structured("case","research","d","p", {"defense_score": 50, "prosecution_score": 50})
         assert isinstance(v["confidence"], int)
         assert v["confidence"] == 82
 
@@ -74,9 +74,10 @@ class TestOrchestrator:
         with patch.object(orch._research,"run",AsyncMock(return_value=mock_text)), \
              patch.object(orch._defense,"run",AsyncMock(return_value=mock_text)), \
              patch.object(orch._prosecution,"run",AsyncMock(return_value=mock_text)), \
+             patch.object(orch._scoring,"run_structured",AsyncMock(return_value={"defense_score":50,"prosecution_score":50,"stronger_side":"balanced","explanation":"Mock"})), \
              patch.object(orch._judge,"run_structured",AsyncMock(return_value=mock_verdict)):
             result = await orch.run("A legal case.")
-        assert {"research","defense","prosecution","verdict"} <= set(result.keys())
+        assert {"research","defense","prosecution","verdict","evidence","rounds","scoring"} <= set(result.keys())
 
     async def test_streaming_yields_correct_stages(self):
         from agents.orchestrator import AgentOrchestrator
@@ -88,9 +89,10 @@ class TestOrchestrator:
         with patch.object(orch._research,"run",AsyncMock(return_value=mock_text)), \
              patch.object(orch._defense,"run",AsyncMock(return_value=mock_text)), \
              patch.object(orch._prosecution,"run",AsyncMock(return_value=mock_text)), \
+             patch.object(orch._scoring,"run_structured",AsyncMock(return_value={"defense_score":50,"prosecution_score":50,"stronger_side":"balanced","explanation":"Mock"})), \
              patch.object(orch._judge,"run_structured",AsyncMock(return_value=mock_verdict)):
             stages = [s async for s, _ in orch.run_streaming("Streaming case.")]
-        assert stages == ["research","defense","prosecution","judge"]
+        assert stages == ["research","evidence","round","round","defense","prosecution","scoring","judge"]
 
 
 @pytest.mark.asyncio

@@ -6,6 +6,7 @@ import json
 import math
 from pathlib import Path
 import re
+import uuid
 from typing import Iterable
 
 from config.settings import settings
@@ -32,6 +33,7 @@ DEFAULT_CORPUS_PATH = Path(__file__).with_name("legal_corpus.json")
 
 @dataclass
 class LegalDocument:
+    id: str
     title: str
     citation: str
     content: str
@@ -118,7 +120,7 @@ class SemanticVectorIndex:
             raise RuntimeError("Semantic dependencies are unavailable")
 
         self.documents = documents
-        self.model = SentenceTransformer(model_name)
+        self.model = SentenceTransformer(model_name, local_files_only=True)
         self.embeddings = self._encode([doc.text for doc in documents])
         dimension = int(self.embeddings.shape[1])
         self.index = faiss.IndexFlatIP(dimension)
@@ -145,13 +147,14 @@ class LegalKnowledgeBase:
         self.backend = "local-vector"
         self._index = self._build_index()
 
-    def retrieve(self, query: str) -> list[LegalDocument]:
-        matches = self._index.search(query, settings.TOP_K_DOCS)
+    def retrieve(self, query: str, limit: int | None = None) -> list[LegalDocument]:
+        matches = self._index.search(query, limit or settings.TOP_K_DOCS)
         results: list[LegalDocument] = []
         for doc_index, score in matches:
             source = self.documents[doc_index]
             results.append(
                 LegalDocument(
+                    id=source.id,
                     title=source.title,
                     citation=source.citation,
                     content=source.content,
@@ -161,6 +164,45 @@ class LegalKnowledgeBase:
                 )
             )
         return results
+
+    def list_documents(self) -> list[dict[str, object]]:
+        return [self._serialize_document(doc) for doc in self.documents]
+
+    def upsert_document(self, payload: dict[str, object]) -> dict[str, object]:
+        normalized = self._normalize_document_record(payload)
+        existing_index = next(
+            (index for index, doc in enumerate(self.documents) if doc.id == normalized["id"]),
+            None,
+        )
+        document = LegalDocument(
+            id=str(normalized["id"]),
+            title=str(normalized["title"]),
+            citation=str(normalized["citation"]),
+            content=str(normalized["content"]),
+            keywords=tuple(normalized["keywords"]),
+            source=str(normalized["source"]),
+        )
+        if existing_index is None:
+            self.documents.append(document)
+        else:
+            self.documents[existing_index] = document
+        self._persist_documents()
+        self.reload()
+        return self._serialize_document(document)
+
+    def delete_document(self, doc_id: str) -> bool:
+        remaining = [doc for doc in self.documents if doc.id != doc_id]
+        if len(remaining) == len(self.documents):
+            return False
+        self.documents = remaining
+        self._persist_documents()
+        self.reload()
+        return True
+
+    def reload(self) -> None:
+        self.documents = self._load_documents(self.corpus_path)
+        self.backend = "local-vector"
+        self._index = self._build_index()
 
     def format_context(self, docs: list[LegalDocument]) -> str:
         chunks = []
@@ -193,12 +235,50 @@ class LegalKnowledgeBase:
                 self.backend = "local-vector"
         return LocalVectorIndex(self.documents)
 
+    def _persist_documents(self) -> None:
+        payload = [self._serialize_document(doc) for doc in self.documents]
+        self.corpus_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    @staticmethod
+    def _serialize_document(doc: LegalDocument) -> dict[str, object]:
+        return {
+            "id": doc.id,
+            "title": doc.title,
+            "citation": doc.citation,
+            "content": doc.content,
+            "keywords": list(doc.keywords),
+            "source": doc.source,
+        }
+
+    @staticmethod
+    def _normalize_document_record(payload: dict[str, object]) -> dict[str, object]:
+        title = str(payload.get("title", "")).strip()
+        citation = str(payload.get("citation", "")).strip()
+        content = str(payload.get("content", "")).strip()
+        source = str(payload.get("source", "legal_corpus.json")).strip() or "legal_corpus.json"
+        keywords_raw = payload.get("keywords", [])
+        if isinstance(keywords_raw, str):
+            keywords = [item.strip() for item in keywords_raw.split(",") if item.strip()]
+        else:
+            keywords = [str(item).strip() for item in list(keywords_raw) if str(item).strip()]
+        if not title or not citation or not content:
+            raise ValueError("Title, citation, and content are required")
+        return {
+            "id": str(payload.get("id") or uuid.uuid4()),
+            "title": title,
+            "citation": citation,
+            "content": content,
+            "keywords": keywords,
+            "source": source,
+        }
+
     @staticmethod
     def _load_documents(path: Path) -> list[LegalDocument]:
         if path.exists():
             payload = json.loads(path.read_text(encoding="utf-8"))
             return [
                 LegalDocument(
+                    id=item.get("id") or str(uuid.uuid4()),
                     title=item["title"],
                     citation=item["citation"],
                     content=item["content"],

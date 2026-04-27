@@ -1,0 +1,9 @@
+{
+  "default_include_appeals": false,
+  "retrieval_documents": 4,
+  "reasoning_profile": "balanced",
+  "evidence_highlight_limit": 8,
+  "typing_speed_ms": 8,
+  "auto_scroll_results": true,
+  "show_keyword_highlights": true
+}

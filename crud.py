@@ -7,15 +7,16 @@ Keeps raw SQL/ORM logic out of routes and agents.
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from db.models import User, Case, CaseAgentOutput
+from db.models import ActivityLog, User, Case, CaseAgentOutput
 
 
 # ═══════════════════════════════════════════════════════
@@ -63,7 +64,9 @@ async def create_case(
 ) -> Case:
     """Create a new case record (before pipeline runs)."""
     # Auto-generate title from first 80 chars if not provided
-    auto_title = title or (case_description[:77] + "...") if len(case_description) > 80 else case_description
+    auto_title = title or (
+        case_description[:77] + "..." if len(case_description) > 80 else case_description
+    )
     case = Case(
         id=str(uuid.uuid4()),
         user_id=user_id,
@@ -150,3 +153,39 @@ async def delete_case(db: AsyncSession, case_id: str, user_id: str) -> bool:
     await db.delete(case)
     await db.flush()
     return True
+
+
+async def create_activity_log(
+    db: AsyncSession,
+    user_id: str,
+    action: str,
+    description: str,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> ActivityLog:
+    log = ActivityLog(
+        user_id=user_id,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        description=description,
+        metadata_json=json.dumps(metadata) if metadata else None,
+    )
+    db.add(log)
+    await db.flush()
+    return log
+
+
+async def get_activity_logs(
+    db: AsyncSession,
+    user_id: str,
+    limit: int = 50,
+) -> List[ActivityLog]:
+    result = await db.execute(
+        select(ActivityLog)
+        .where(ActivityLog.user_id == user_id)
+        .order_by(desc(ActivityLog.created_at), desc(ActivityLog.id))
+        .limit(limit)
+    )
+    return list(result.scalars().all())

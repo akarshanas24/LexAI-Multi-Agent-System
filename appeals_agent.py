@@ -59,8 +59,8 @@ Schema:
   "dissenting_view": "<1-2 sentences — alternative interpretation of the case, even if appeal not warranted>"
 }"""
 
-    def build_prompt(self, case: str, context: str = "") -> str:
-        return f"""Original legal case:
+    def build_prompt(self, case: str, context: str = "", style_hint: str = "") -> str:
+        prompt = f"""Original legal case:
 {case}
 
 ---
@@ -68,6 +68,9 @@ Schema:
 
 ---
 Review the verdict above and render your appellate assessment as JSON."""
+        if style_hint:
+            prompt += f"\n\nReasoning style preference:\n{style_hint}"
+        return prompt
 
     async def run_structured(
         self,
@@ -76,6 +79,7 @@ Review the verdict above and render your appellate assessment as JSON."""
         defense: str,
         prosecution: str,
         verdict: dict,
+        style_hint: str = "",
     ) -> dict:
         """
         Run the appeals review and return parsed JSON.
@@ -100,7 +104,7 @@ Review the verdict above and render your appellate assessment as JSON."""
             f"  Reasoning: {verdict.get('reasoning')}\n"
             f"  Key finding: {verdict.get('key_finding')}"
         )
-        prompt = self.build_prompt(case, context)
+        prompt = self.build_prompt(case, context, style_hint)
         raw = await self.run(prompt)
 
         cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()

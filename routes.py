@@ -19,7 +19,7 @@ from auth.auth import (
     create_access_token, get_current_user,
 )
 from db.database import get_db
-from db.crud import get_user_by_username, get_user_by_email, create_user
+from db.crud import create_activity_log, get_user_by_username, get_user_by_email, create_user
 from db.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -83,6 +83,15 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
             status_code=503,
             detail="Database is temporarily busy. Please retry in a moment.",
         ) from exc
+    await create_activity_log(
+        db,
+        user.id,
+        "user_registered",
+        f"Registered account for {user.username}",
+        entity_type="user",
+        entity_id=user.id,
+        metadata={"email": user.email},
+    )
     return UserResponse(id=user.id, username=user.username, email=user.email)
 
 
@@ -107,6 +116,14 @@ async def login(
         raise HTTPException(status_code=400, detail="Account is disabled")
 
     token = create_access_token({"sub": user.username})
+    await create_activity_log(
+        db,
+        user.id,
+        "user_login",
+        f"Signed in as {user.username}",
+        entity_type="user",
+        entity_id=user.id,
+    )
     return TokenResponse(access_token=token)
 
 

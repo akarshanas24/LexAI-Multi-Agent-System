@@ -137,6 +137,35 @@ def generate_case_pdf(case, agent_outputs: dict) -> bytes:
                    HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#c04040"), spaceAfter=8)]
         _bullets(story, agent_outputs["prosecution"]); story.append(Spacer(1, 0.5*cm))
 
+    if "evidence" in agent_outputs:
+        story += [Paragraph("EVIDENCE VIEWER — RETRIEVED LEGAL SOURCES", STYLES["agent_label"]),
+                   HRFlowable(width="100%", thickness=0.5, color=GOLD_LIGHT, spaceAfter=8)]
+        try: evidence = json.loads(agent_outputs["evidence"])
+        except: evidence = {}
+        for item in (evidence.get("documents") or [])[:6]:
+            title = item.get("title") or item.get("citation") or "Untitled Source"
+            citation = item.get("citation") or "No citation"
+            content = item.get("content") or ""
+            story.append(Paragraph(f"<b>{title}</b> — {citation}", STYLES["body"]))
+            story.append(Paragraph(content, STYLES["body"]))
+            story.append(Spacer(1, 0.18*cm))
+        story.append(Spacer(1, 0.4*cm))
+
+    if "scoring" in agent_outputs:
+        story += [Paragraph("ARGUMENT STRENGTH METRICS", STYLES["agent_label"]),
+                   HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#6a86b8"), spaceAfter=8)]
+        try: scoring = json.loads(agent_outputs["scoring"])
+        except: scoring = {}
+        story.append(Paragraph(
+            f"<b>Defense Score:</b> {int(scoring.get('defense_score', 0))}%<br/>"
+            f"<b>Prosecution Score:</b> {int(scoring.get('prosecution_score', 0))}%<br/>"
+            f"<b>Stronger Side:</b> {scoring.get('stronger_side', 'balanced')}",
+            STYLES["body"],
+        ))
+        if scoring.get("explanation"):
+            story.append(Paragraph(scoring["explanation"], STYLES["body"]))
+        story.append(Spacer(1, 0.5*cm))
+
     # Judge
     if "judge" in agent_outputs:
         story += [Paragraph("JUDGE AGENT — VERDICT & REASONING", STYLES["agent_label"]),

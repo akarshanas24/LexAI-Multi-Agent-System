@@ -1,136 +1,236 @@
-/**
- * api.js
- * ======
- * All communication between frontend and backend.
- *
- * ✅ Correct: Frontend → Backend → Agents → LLM
- * ❌ Wrong:   Frontend → Anthropic API directly
- *
- * Every request goes through YOUR backend server.
- * The backend holds the API key, handles auth, and orchestrates agents.
- */
-
 const API = {
-  BASE: "",
+  BASE: (() => {
+    if (window.LEXAI_API_BASE) return window.LEXAI_API_BASE;
+    const isLocalHost = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+    if (window.location.protocol === "file:") return "http://127.0.0.1:8003";
+    if (isLocalHost && ["8000", "8003"].includes(window.location.port)) return "";
+    return "http://127.0.0.1:8003";
+  })(),
 
-  // ── Auth helpers ─────────────────────────────────────
-  getToken()        { return localStorage.getItem("lexai_token"); },
-  setToken(token)   { localStorage.setItem("lexai_token", token); },
-  clearToken()      { localStorage.removeItem("lexai_token"); },
-  isLoggedIn()      { return !!this.getToken(); },
+  FALLBACK_BASES: (() => {
+    if (window.LEXAI_API_BASE) return [window.LEXAI_API_BASE];
+    const bases = [];
+    const isLocalHost = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+    if (window.location.protocol !== "file:" && isLocalHost && window.location.port) {
+      bases.push("");
+    }
+    bases.push("http://127.0.0.1:8003", "http://127.0.0.1:8000");
+    return [...new Set(bases)];
+  })(),
+
+  getToken() {
+    return localStorage.getItem("lexai_token");
+  },
+
+  setToken(token) {
+    localStorage.setItem("lexai_token", token);
+  },
+
+  clearToken() {
+    localStorage.removeItem("lexai_token");
+  },
+
+  isLoggedIn() {
+    return !!this.getToken();
+  },
 
   _headers(extra = {}) {
-    const h = { "Content-Type": "application/json", ...extra };
-    const t = this.getToken();
-    if (t) h["Authorization"] = `Bearer ${t}`;
-    return h;
+    const headers = { ...extra };
+    const token = this.getToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
   },
 
-  async _fetch(path, opts = {}) {
-    let res;
-    try {
-      res = await fetch(this.BASE + path, {
-        ...opts,
-        headers: this._headers(opts.headers || {}),
-      });
-    } catch {
-      throw new Error(`Could not reach backend on ${this.BASE}`);
+  async _fetch(path, options = {}) {
+    let response = null;
+    let lastError = null;
+
+    for (const base of this.FALLBACK_BASES) {
+      try {
+        response = await fetch(base + path, {
+          ...options,
+          headers: this._headers(options.headers || {}),
+        });
+        if (response) {
+          this.BASE = base;
+          break;
+        }
+      } catch (error) {
+        lastError = error;
+      }
     }
-    if (res.status === 401) { this.clearToken(); showAuthModal(); throw new Error("Session expired"); }
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try { msg = (await res.json()).detail || msg; } catch {}
-      throw new Error(msg);
+
+    if (!response) {
+      throw new Error(`Could not reach backend on ${window.location.origin}`);
     }
-    return res;
+
+    if (response.status === 401) {
+      this.clearToken();
+      throw new Error("Session expired");
+    }
+
+    if (!response.ok) {
+      let message = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        message = payload.detail || message;
+      } catch {}
+      throw new Error(message);
+    }
+
+    return response;
   },
 
-  // ── Auth ─────────────────────────────────────────────
   async register(username, email, password) {
-    const res = await this._fetch("/auth/register", {
-      method: "POST", body: JSON.stringify({ username, email, password }),
+    const response = await this._fetch("/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password }),
     });
-    return res.json();
+    return response.json();
   },
 
   async login(username, password) {
-    let res;
-    try {
-      res = await fetch(this.BASE + "/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username, password }),
-      });
-    } catch {
-      throw new Error(`Could not reach backend on ${this.BASE}`);
+    let response = null;
+
+    for (const base of this.FALLBACK_BASES) {
+      try {
+        response = await fetch(base + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ username, password }),
+        });
+        this.BASE = base;
+        break;
+      } catch {}
     }
-    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || "Login failed"); }
-    const data = await res.json();
+
+    if (!response) {
+      throw new Error(`Could not reach backend on ${window.location.origin}`);
+    }
+
+    if (!response.ok) {
+      const payload = await response.json();
+      throw new Error(payload.detail || "Login failed");
+    }
+
+    const data = await response.json();
     this.setToken(data.access_token);
     return data;
   },
 
   async getMe() {
-    const res = await this._fetch("/auth/me");
-    return res.json();
+    const response = await this._fetch("/auth/me");
+    return response.json();
   },
 
-  // ── Analysis (streaming SSE) ──────────────────────────
-  async analyzeStream(caseDescription, includeAppeals, onStage) {
-    const res = await this._fetch("/analyze/stream", {
+  async analyzeStream(payload, onStage) {
+    const response = await this._fetch("/analyze/stream", {
       method: "POST",
-      body: JSON.stringify({ case_description: caseDescription, include_appeals: includeAppeals }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    const reader  = res.body.getReader();
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let   buffer  = "";
+    let buffer = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
-      buffer = lines.pop();
+      buffer = lines.pop() || "";
+
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
         const raw = line.slice(6).trim();
         if (raw === "[DONE]") return;
-        try { const { stage, data } = JSON.parse(raw); onStage(stage, data); } catch {}
+        try {
+          const payload = JSON.parse(raw);
+          onStage(payload.stage, payload.data);
+        } catch {}
       }
     }
   },
 
-  // ── Case History ─────────────────────────────────────
-  async getCases(limit = 20, offset = 0) {
-    const res = await this._fetch(`/cases?limit=${limit}&offset=${offset}`);
-    return res.json();
+  async getCases(limit = 50, offset = 0) {
+    const response = await this._fetch(`/cases?limit=${limit}&offset=${offset}`);
+    return response.json();
   },
 
   async getCase(caseId) {
-    const res = await this._fetch(`/cases/${caseId}`);
-    return res.json();
+    const response = await this._fetch(`/cases/${caseId}`);
+    return response.json();
+  },
+
+  async getCaseEvidence(caseId) {
+    const response = await this._fetch(`/cases/${caseId}/evidence`);
+    return response.json();
+  },
+
+  async getAnalytics() {
+    const response = await this._fetch("/analytics/summary");
+    return response.json();
+  },
+
+  async getActivityLogs(limit = 50) {
+    const response = await this._fetch(`/activity/logs?limit=${limit}`);
+    return response.json();
+  },
+
+  async getKnowledgeDocuments() {
+    const response = await this._fetch("/knowledge/documents");
+    return response.json();
+  },
+
+  async saveKnowledgeDocument(payload) {
+    const response = await this._fetch("/knowledge/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return response.json();
+  },
+
+  async deleteKnowledgeDocument(docId) {
+    await this._fetch(`/knowledge/documents/${docId}`, { method: "DELETE" });
+  },
+
+  async getSystemSettings() {
+    const response = await this._fetch("/system/settings");
+    return response.json();
+  },
+
+  async updateSystemSettings(payload) {
+    const response = await this._fetch("/system/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return response.json();
   },
 
   async deleteCase(caseId) {
     await this._fetch(`/cases/${caseId}`, { method: "DELETE" });
   },
 
-  // ── PDF Export ────────────────────────────────────────
   async downloadPDF(caseId) {
-    const res = await this._fetch(`/cases/${caseId}/pdf`);
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `lexai_${caseId.slice(0, 8)}.pdf`;
-    a.click();
+    const response = await this._fetch(`/cases/${caseId}/pdf`);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `lexai_${caseId.slice(0, 8)}.pdf`;
+    anchor.click();
     URL.revokeObjectURL(url);
   },
 
-  // ── Health ────────────────────────────────────────────
   async health() {
-    const res = await fetch(this.BASE + "/health");
-    return res.json();
+    const response = await fetch(this.BASE + "/health");
+    return response.json();
   },
 };

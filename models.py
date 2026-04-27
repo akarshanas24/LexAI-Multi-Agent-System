@@ -76,3 +76,16 @@ class CaseAgentOutput(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     case: Mapped["Case"]  = relationship("Case", back_populates="agent_outputs")
+
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    entity_type: Mapped[str | None] = mapped_column(String(64))
+    entity_id: Mapped[str | None] = mapped_column(String(64))
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata_json: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

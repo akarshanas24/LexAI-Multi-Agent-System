@@ -1,240 +1,507 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LexAI — Multi-Agent Legal Reasoning</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LexAI - Legal Reasoning Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=20260425c" />
 </head>
 <body>
-
-<!-- ── Auth Modal ────────────────────────────────────── -->
-<div class="modal-overlay" id="authModal">
-  <div class="modal-box">
-    <div class="modal-logo">LexAI</div>
-    <div class="modal-tabs">
-      <button class="modal-tab active" id="tabLogin"    onclick="switchAuthTab('login')">Sign In</button>
-      <button class="modal-tab"        id="tabRegister" onclick="switchAuthTab('register')">Register</button>
-    </div>
-
-    <div id="loginTab">
-      <input class="modal-input" id="loginUsername"  type="text"     placeholder="Username"/>
-      <input class="modal-input" id="loginPassword"  type="password" placeholder="Password"/>
-      <button class="modal-submit" onclick="doLogin()">Enter the Court</button>
-    </div>
-
-    <div id="registerTab" style="display:none">
-      <input class="modal-input" id="regUsername" type="text"     placeholder="Username"/>
-      <input class="modal-input" id="regEmail"    type="email"    placeholder="Email address"/>
-      <input class="modal-input" id="regPassword" type="password" placeholder="Password (min 8 chars)"/>
-      <button class="modal-submit" onclick="doRegister()">Create Account</button>
-    </div>
-
-    <p class="auth-error" id="authError"></p>
-  </div>
-</div>
-
-<!-- ── Header ─────────────────────────────────────────── -->
-<header>
-  <p class="header-eyebrow">Multi-Agent · RAG · LLM Reasoning</p>
-  <h1 class="header-title">Lex<span>AI</span></h1>
-  <p class="header-sub">A simulated courtroom where specialized AI agents research, argue, and render judgment on legal cases.</p>
-
-  <div class="user-bar" id="userBar" style="display:none">
-    <span class="user-name" id="userInfo"></span>
-    <button class="logout-btn" onclick="doLogout()">Sign out</button>
-  </div>
-  <div class="auth-prompt" id="authPrompt">
-    <button class="auth-prompt-btn" onclick="showAuthModal('login')">Sign in to analyze cases</button>
-  </div>
-</header>
-
-<!-- ── Architecture Banner ───────────────────────────── -->
-<div class="arch-banner">
-  <span class="arch-step">Frontend</span>
-  <span class="arch-arrow">→</span>
-  <span class="arch-step highlight">Backend API</span>
-  <span class="arch-arrow">→</span>
-  <span class="arch-step highlight">Agents</span>
-  <span class="arch-arrow">→</span>
-  <span class="arch-step highlight">LLM</span>
-</div>
-
-<!-- ── Pipeline Bar ──────────────────────────────────── -->
-<section class="system-status" id="systemStatus">
-  <div class="status-block">
-    <p class="section-label">System Status</p>
-    <div class="status-grid">
-      <div class="status-chip">
-        <span class="status-chip-label">Agent Backend</span>
-        <strong id="statusAgentProvider">Checking...</strong>
+  <div class="auth-overlay" id="authModal">
+    <div class="auth-card">
+      <div class="auth-brand-row">
+        <div class="brand-mark">LX</div>
+        <div>
+          <p class="eyebrow">Secure Access</p>
+          <h2>LexAI Workspace</h2>
+        </div>
       </div>
-      <div class="status-chip">
-        <span class="status-chip-label">Agent Model</span>
-        <strong id="statusAgentModel">-</strong>
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+        <button id="tabRegister" class="auth-tab" onclick="switchAuthTab('register')">Register</button>
       </div>
-      <div class="status-chip">
-        <span class="status-chip-label">RAG Backend</span>
-        <strong id="statusRagBackend">-</strong>
+      <div id="loginTab">
+        <input id="loginUsername" class="auth-input" type="text" placeholder="Username" />
+        <input id="loginPassword" class="auth-input" type="password" placeholder="Password" />
+        <button class="primary-btn wide-btn" onclick="doLogin()">Enter Workspace</button>
       </div>
-      <div class="status-chip">
-        <span class="status-chip-label">Corpus Docs</span>
-        <strong id="statusCorpusDocs">-</strong>
+      <div id="registerTab" style="display:none">
+        <input id="regUsername" class="auth-input" type="text" placeholder="Username" />
+        <input id="regEmail" class="auth-input" type="email" placeholder="Email" />
+        <input id="regPassword" class="auth-input" type="password" placeholder="Password" />
+        <button class="primary-btn wide-btn" onclick="doRegister()">Create Account</button>
       </div>
+      <p id="authError" class="auth-error"></p>
     </div>
   </div>
-</section>
 
-<nav class="pipeline-bar" id="pipelineBar">
-  <div class="pipe-step" id="ps-research"><div class="step-num">1</div><span class="step-label">Research</span></div>
-  <div class="pipe-arrow"></div>
-  <div class="pipe-step" id="ps-defense"><div class="step-num">2</div><span class="step-label">Defense</span></div>
-  <div class="pipe-arrow"></div>
-  <div class="pipe-step" id="ps-prosecution"><div class="step-num">3</div><span class="step-label">Prosecution</span></div>
-  <div class="pipe-arrow"></div>
-  <div class="pipe-step" id="ps-judge"><div class="step-num">4</div><span class="step-label">Verdict</span></div>
-  <div class="pipe-arrow"></div>
-  <div class="pipe-step" id="ps-appeals"><div class="step-num">5</div><span class="step-label">Appeals</span></div>
-</nav>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">LX</div>
+        <div>
+          <div class="sidebar-title">LexAI</div>
+          <div class="sidebar-subtitle">Legal Reasoning Engine</div>
+        </div>
+      </div>
 
-<!-- ── Layout: Sidebar + Main ────────────────────────── -->
-<div class="layout">
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-sidebar="dashboard" onclick="setSidebarActive('dashboard'); scrollToSection('overview')">
+          <span class="sidebar-icon">◫</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="sidebar-item" data-sidebar="analyze" onclick="setSidebarActive('analyze'); scrollToSection('workbench')">
+          <span class="sidebar-icon">◇</span>
+          <span>Analyze</span>
+        </button>
+        <button class="sidebar-item" data-sidebar="evidence" onclick="setSidebarActive('evidence'); switchResultsTab('evidence'); scrollToSection('resultsSection')">
+          <span class="sidebar-icon">▣</span>
+          <span>Evidence</span>
+        </button>
+        <button class="sidebar-item" data-sidebar="history" onclick="setSidebarActive('history'); scrollToSection('history')">
+          <span class="sidebar-icon">☰</span>
+          <span>History</span>
+        </button>
+        <button class="sidebar-item" data-sidebar="insights" onclick="setSidebarActive('insights'); switchResultsTab('insights'); scrollToSection('insights')">
+          <span class="sidebar-icon">◌</span>
+          <span>Insights</span>
+        </button>
+        <button class="sidebar-item" data-sidebar="knowledge" onclick="setSidebarActive('knowledge'); scrollToSection('knowledgeBase')">
+          <span class="sidebar-icon">KB</span>
+          <span>Knowledge</span>
+        </button>
+        <button class="sidebar-item" data-sidebar="settings" onclick="setSidebarActive('settings'); scrollToSection('systemSettings')">
+          <span class="sidebar-icon">S</span>
+          <span>Settings</span>
+        </button>
+      </nav>
 
-  <!-- History Sidebar -->
-  <aside class="history-sidebar">
-    <p class="section-label">Case History</p>
-    <div class="history-list" id="historyList">
-      <p class="history-empty">Sign in to view history.</p>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="topbar-copy">
+          <p class="eyebrow">AI Legal Workspace</p>
+        </div>
+        <nav class="topbar-nav">
+          <a href="#overview" onclick="setSidebarActive('dashboard')">Overview</a>
+          <a href="#workbench" onclick="setSidebarActive('analyze')">Workbench</a>
+          <a href="#history" onclick="setSidebarActive('history')">History</a>
+          <a href="#insights" onclick="setSidebarActive('insights')">Insights</a>
+          <a href="#knowledgeBase" onclick="setSidebarActive('knowledge')">Knowledge</a>
+          <a href="#systemSettings" onclick="setSidebarActive('settings')">Settings</a>
+        </nav>
+        <div class="topbar-actions">
+          <div id="userBar" class="user-chip" style="display:none">
+            <button id="userActivityToggle" class="user-avatar user-avatar-btn" onclick="toggleUserActivityPanel(event)">L</button>
+            <span id="userInfo"></span>
+            <button class="ghost-btn" onclick="doLogout()">Sign out</button>
+          </div>
+          <div id="authPrompt" class="subtle-label">
+            Sign in required
+          </div>
+        </div>
+        <div id="userActivityPanel" class="user-activity-panel" style="display:none">
+          <div class="panel-heading-row">
+            <div>
+              <p class="eyebrow">User Activity</p>
+              <h2>Recent actions</h2>
+            </div>
+          </div>
+          <div id="activityLogList" class="activity-log-list empty-state">No user activity yet</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <section id="overview" class="hero-card">
+          <div class="hero-left">
+            <h1>LexAI — Legal Reasoning Platform</h1>
+            <div class="hero-description-box">
+              <p class="hero-description">
+                A multi-agent legal reasoning platform that uses retrieval-augmented
+                generation and structured debate to analyze cases and generate
+                explainable decisions with semantic legal search and AI reasoning.
+              </p>
+            </div>
+            <div class="feature-badges">
+              <span>Multi-Agent Reasoning</span>
+              <span>RAG-based Legal Search</span>
+              <span>Explainable Verdicts</span>
+              <span>Evidence Visualization</span>
+              <span>PDF Reports</span>
+            </div>
+            <div class="hero-actions">
+              <a class="primary-btn" href="#workbench" onclick="setSidebarActive('analyze')">Start Analysis</a>
+              <button class="secondary-btn" onclick="switchResultsTab('debate'); scrollToSection('resultsSection')">View Demo</button>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="metric-tile">
+              <span>What LexAI does</span>
+              <strong>Transforms case input into research, argumentation, scoring, and judgment.</strong>
+            </div>
+            <div class="metric-tile">
+              <span>Why it helps</span>
+              <strong>Gives a readable legal reasoning trail instead of a black-box answer.</strong>
+            </div>
+            <div class="metric-tile">
+              <span>Output style</span>
+              <strong>Debate records, retrieved evidence, verdict confidence, and exportable reports.</strong>
+            </div>
+          </div>
+        </section>
+
+        <section id="workbench" class="dashboard-grid">
+          <div class="input-panel card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">Input Panel</p>
+                <h2>Case Intake</h2>
+              </div>
+              <div class="status-pill neutral">Ready</div>
+            </div>
+            <input id="caseTitle" class="input-field" type="text" placeholder="Case title" />
+            <textarea id="caseInput" class="textarea-field" placeholder="Describe the case facts, parties, allegations, evidence tensions, and requested outcome."></textarea>
+            <div class="category-row">
+              <button class="chip-btn" onclick="loadPreset(0)">IP / Code Theft</button>
+              <button class="chip-btn" onclick="loadPreset(1)">Contract Breach</button>
+              <button class="chip-btn" onclick="loadPreset(2)">Wrongful Termination</button>
+              <button class="chip-btn" onclick="loadPreset(3)">Financial Fraud</button>
+            </div>
+            <label class="toggle-card">
+              <input id="appealsToggle" type="checkbox" />
+              <span>Include appeals review</span>
+            </label>
+            <div class="button-row">
+              <button id="analyzeBtn" class="primary-btn" onclick="analyzeCase()">Analyze Case</button>
+              <button class="secondary-btn" onclick="clearAll()">Clear</button>
+              <button id="pdfBtn" class="secondary-btn" onclick="downloadPDF()" style="display:none">Export PDF</button>
+            </div>
+          </div>
+
+          <div class="pipeline-panel card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">Pipeline</p>
+                <h2>Execution Flow</h2>
+              </div>
+              <div id="liveStatus" class="pipeline-live">Waiting for input</div>
+            </div>
+
+            <div class="stepper">
+              <div class="step-card pending" id="step-research">
+                <div class="step-icon">⌕</div>
+                <div>
+                  <strong>Research</strong>
+                  <small>Legal retrieval</small>
+                </div>
+              </div>
+              <div class="step-card pending" id="step-debate">
+                <div class="step-icon">↔</div>
+                <div>
+                  <strong>Debate</strong>
+                  <small>Agent arguments</small>
+                </div>
+              </div>
+              <div class="step-card pending" id="step-scoring">
+                <div class="step-icon">▤</div>
+                <div>
+                  <strong>Scoring</strong>
+                  <small>Strength analysis</small>
+                </div>
+              </div>
+              <div class="step-card pending" id="step-judge">
+                <div class="step-icon">⚖</div>
+                <div>
+                  <strong>Judgment</strong>
+                  <small>Verdict engine</small>
+                </div>
+              </div>
+              <div class="step-card pending" id="step-appeals">
+                <div class="step-icon">↺</div>
+                <div>
+                  <strong>Appeals</strong>
+                  <small>Optional review</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-summary">
+              <div class="mini-score">
+                <span>Defense Score</span>
+                <strong id="defenseScoreMini">-</strong>
+              </div>
+              <div class="mini-score">
+                <span>Prosecution Score</span>
+                <strong id="prosecutionScoreMini">-</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="errorBanner" class="error-banner"></div>
+
+        <section id="resultsSection" class="results-shell">
+          <div class="results-topbar">
+            <div>
+              <p class="eyebrow">Results</p>
+              <h2>Agent Workspace</h2>
+            </div>
+            <div class="results-tabs">
+              <button class="result-tab active" data-result-tab="debate" onclick="switchResultsTab('debate')">Debate</button>
+              <button class="result-tab" data-result-tab="evidence" onclick="switchResultsTab('evidence')">Evidence</button>
+              <button class="result-tab" data-result-tab="insights" onclick="switchResultsTab('insights')">Insights</button>
+            </div>
+          </div>
+
+          <div id="debatePanel" class="result-panel active">
+            <div id="roundsTimeline" class="rounds-timeline empty-state">
+              Run analysis to see results
+            </div>
+
+            <div class="agent-grid">
+              <article class="agent-card research-card">
+                <div class="agent-header">
+                  <div>
+                    <span class="agent-icon">⌕</span>
+                    <span class="agent-title">Research Agent</span>
+                  </div>
+                  <span class="agent-badge" id="status-research">Standby</span>
+                </div>
+                <div id="body-research" class="agent-content empty-state">Run analysis to see results</div>
+              </article>
+
+              <article class="agent-card defense-card">
+                <div class="agent-header">
+                  <div>
+                    <span class="agent-icon">🛡</span>
+                    <span class="agent-title">Defense Agent</span>
+                  </div>
+                  <span class="agent-badge" id="status-defense">Standby</span>
+                </div>
+                <div id="body-defense" class="agent-content empty-state">Run analysis to see results</div>
+              </article>
+
+              <article class="agent-card prosecution-card">
+                <div class="agent-header">
+                  <div>
+                    <span class="agent-icon">▲</span>
+                    <span class="agent-title">Prosecution Agent</span>
+                  </div>
+                  <span class="agent-badge" id="status-prosecution">Standby</span>
+                </div>
+                <div id="body-prosecution" class="agent-content empty-state">Run analysis to see results</div>
+              </article>
+
+              <article class="agent-card judge-card">
+                <div class="agent-header">
+                  <div>
+                    <span class="agent-icon">⚖</span>
+                    <span class="agent-title">Judge Agent</span>
+                  </div>
+                  <span class="agent-badge" id="status-judge">Standby</span>
+                </div>
+                <div id="body-judge" class="agent-content empty-state">Run analysis to see results</div>
+                <div class="judge-metrics">
+                  <div class="judge-metric">
+                    <span>Ruling</span>
+                    <strong id="verdictRuling">-</strong>
+                  </div>
+                  <div class="judge-metric">
+                    <span>Confidence</span>
+                    <strong id="verdictConfidence">-</strong>
+                  </div>
+                  <div class="judge-metric">
+                    <span>Winner</span>
+                    <strong id="verdictWinner">-</strong>
+                  </div>
+                </div>
+                <div class="confidence-track">
+                  <div id="confidenceBar" class="confidence-fill"></div>
+                </div>
+                <p id="verdictFinding" class="judge-finding"></p>
+              </article>
+
+              <article id="appealsCard" class="agent-card appeals-card" style="display:none">
+                <div class="agent-header">
+                  <div>
+                    <span class="agent-icon">↺</span>
+                    <span class="agent-title">Appeals Agent</span>
+                  </div>
+                  <span class="agent-badge" id="status-appeals">Standby</span>
+                </div>
+                <div id="body-appeals" class="agent-content empty-state">Run analysis to see results</div>
+              </article>
+            </div>
+          </div>
+
+          <div id="evidencePanel" class="result-panel">
+            <div class="panel-heading-row">
+              <div>
+                <p class="eyebrow">Evidence View</p>
+                <h2>Retrieved legal sources</h2>
+              </div>
+              <div id="evidenceMeta" class="subtle-label">Run analysis to see results</div>
+            </div>
+            <div id="evidenceList" class="evidence-accordion empty-state">Run analysis to see results</div>
+          </div>
+
+          <div id="insightsPanel" class="result-panel">
+            <div class="panel-heading-row">
+              <div>
+                <p class="eyebrow">Insights</p>
+                <h2>Confidence and comparison</h2>
+              </div>
+            </div>
+            <div class="insight-grid">
+              <div class="insight-card">
+                <span>Confidence Score</span>
+                <strong id="insightConfidence">0%</strong>
+                <div class="confidence-track large">
+                  <div id="insightConfidenceBar" class="confidence-fill"></div>
+                </div>
+              </div>
+              <div class="insight-card">
+                <span>Defense vs Prosecution</span>
+                <div class="compare-bars">
+                  <div>
+                    <label>Defense</label>
+                    <div class="compare-track"><div id="defenseCompareBar" class="compare-fill defense-fill"></div></div>
+                  </div>
+                  <div>
+                    <label>Prosecution</label>
+                    <div class="compare-track"><div id="prosecutionCompareBar" class="compare-fill prosecution-fill"></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="insight-card">
+                <span>Verdict Snapshot</span>
+                <div id="verdictDistribution" class="css-chart empty-state">Run analysis to see results</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="history" class="history-shell card">
+          <div class="section-header-row">
+            <div>
+              <p class="eyebrow">History</p>
+              <h2>Saved cases</h2>
+            </div>
+            <div class="history-toolbar">
+              <input id="historySearch" class="input-field compact" type="text" placeholder="Search cases" oninput="applyHistoryFilters()" />
+              <select id="historyFilter" class="input-field compact" onchange="applyHistoryFilters()">
+                <option value="all">All rulings</option>
+                <option value="liable">Liable / Guilty</option>
+                <option value="not">Not liable / Not guilty</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+          </div>
+          <div id="historyList" class="history-grid empty-state">Run analysis to see results</div>
+        </section>
+
+        <section id="insights" class="analytics-shell card">
+          <div class="section-header-row">
+            <div>
+              <p class="eyebrow">Workspace Insights</p>
+              <h2>Analytics dashboard</h2>
+            </div>
+          </div>
+          <div id="insightsSummary" class="analytics-grid"></div>
+          <div class="analytics-grid wide">
+            <div id="recentCasesChart" class="analytics-card empty-state">Run analysis to see results</div>
+            <div id="verdictMetricsCard" class="analytics-card empty-state">Run analysis to see results</div>
+            <div id="insightsBackendCard" class="analytics-card empty-state">Run analysis to see results</div>
+          </div>
+        </section>
+
+        <section id="knowledgeBase" class="analytics-shell card">
+          <div class="section-header-row">
+            <div>
+              <p class="eyebrow">Knowledge Base</p>
+              <h2>IPC and legal documents</h2>
+            </div>
+          </div>
+          <div class="split-operations-grid">
+            <div class="analytics-card">
+              <div id="knowledgeDocList" class="knowledge-doc-list empty-state">Run analysis to see results</div>
+            </div>
+            <div class="analytics-card">
+              <div class="form-stack">
+                <input id="knowledgeDocId" type="hidden" />
+                <input id="knowledgeTitle" class="input-field compact" type="text" placeholder="Document title" />
+                <input id="knowledgeCitation" class="input-field compact" type="text" placeholder="Citation / section" />
+                <input id="knowledgeSource" class="input-field compact" type="text" placeholder="Source" />
+                <input id="knowledgeKeywords" class="input-field compact" type="text" placeholder="Keywords comma separated" />
+                <textarea id="knowledgeContent" class="textarea-field compact-textarea" placeholder="Legal text or summary"></textarea>
+                <div class="button-row">
+                  <button class="primary-btn" onclick="saveKnowledgeDocument()">Save Document</button>
+                  <button class="secondary-btn" onclick="resetKnowledgeForm()">Clear</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="systemSettings" class="analytics-shell card">
+          <div class="section-header-row">
+            <div>
+              <p class="eyebrow">System Settings</p>
+              <h2>Runtime controls</h2>
+            </div>
+          </div>
+          <div class="analytics-card">
+            <div class="settings-form">
+              <label class="inline-switch">
+                <span>Default appeals review</span>
+                <input id="settingDefaultAppeals" type="checkbox" />
+              </label>
+              <label class="settings-field">
+                <span>Retrieved documents</span>
+                <input id="settingRetrievalDocs" class="input-field compact" type="number" min="1" max="10" />
+              </label>
+              <label class="settings-field">
+                <span>Reasoning profile</span>
+                <select id="settingReasoningProfile" class="input-field compact">
+                  <option value="concise">Concise</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="detailed">Detailed</option>
+                </select>
+              </label>
+              <label class="settings-field">
+                <span>Evidence highlights</span>
+                <input id="settingHighlightLimit" class="input-field compact" type="number" min="1" max="20" />
+              </label>
+              <label class="settings-field">
+                <span>Typing speed ms</span>
+                <input id="settingTypingSpeed" class="input-field compact" type="number" min="0" max="30" />
+              </label>
+              <label class="inline-switch">
+                <span>Auto-scroll results</span>
+                <input id="settingAutoScroll" type="checkbox" />
+              </label>
+              <label class="inline-switch">
+                <span>Keyword highlights</span>
+                <input id="settingKeywordHighlights" type="checkbox" />
+              </label>
+              <div class="button-row">
+                <button class="primary-btn" onclick="saveSystemSettings()">Save Settings</button>
+              </div>
+              <div id="systemModeNote" class="subtle-label">Reasoning mode: multi-agent-rag</div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
-  </aside>
+  </div>
 
-  <!-- Main Content -->
-  <main>
-    <input type="hidden" id="currentCaseId"/>
-    <div class="error-banner" id="errorBanner"></div>
-
-    <!-- Case Input -->
-    <section class="input-section">
-      <p class="section-label">Case Submission</p>
-      <textarea id="caseInput" class="case-textarea"
-        placeholder="Describe the legal case in detail. Include parties, alleged conduct, claimed damages, and relevant context…"></textarea>
-
-      <div class="presets">
-        <button class="preset-btn" onclick="loadPreset(0)">IP / Code Theft</button>
-        <button class="preset-btn" onclick="loadPreset(1)">Contract Breach</button>
-        <button class="preset-btn" onclick="loadPreset(2)">Wrongful Termination</button>
-        <button class="preset-btn" onclick="loadPreset(3)">Financial Fraud</button>
-      </div>
-
-      <div class="action-row">
-        <div class="action-left">
-          <button class="analyze-btn" id="analyzeBtn" onclick="analyzeCase()">Convene the Court <span class="btn-icon">⚖</span></button>
-          <label class="appeals-toggle">
-            <input type="checkbox" id="appealsToggle"/> Include Appeals Review
-          </label>
-        </div>
-        <div class="action-right">
-          <button class="pdf-btn" id="pdfBtn" onclick="downloadPDF()" style="display:none" data-case-id="">Export PDF ↓</button>
-          <button class="clear-btn" onclick="clearAll()">Clear</button>
-        </div>
-      </div>
-    </section>
-
-    <div class="ornamental-divider" id="divider" style="display:none">⚖</div>
-
-    <!-- Agent Cards -->
-    <div class="agents-grid" id="agentsGrid" style="display:none">
-
-      <!-- Research -->
-      <div class="agent-card research full-width" id="card-research">
-        <div class="agent-card-accent"></div>
-        <div class="agent-header">
-          <div class="agent-seal">RAG</div>
-          <div class="agent-meta"><div class="agent-name">Research Agent</div><div class="agent-role">Retrieval-Augmented Legal Analysis</div></div>
-          <div class="agent-status status-idle" id="status-research">Standby</div>
-        </div>
-        <div class="agent-body" id="body-research"><p class="agent-placeholder">Awaiting case submission…</p></div>
-      </div>
-
-      <!-- Defense -->
-      <div class="agent-card defense" id="card-defense">
-        <div class="agent-card-accent"></div>
-        <div class="agent-header">
-          <div class="agent-seal">DEF</div>
-          <div class="agent-meta"><div class="agent-name">Defense Agent</div><div class="agent-role">Counsel for the Accused</div></div>
-          <div class="agent-status status-idle" id="status-defense">Standby</div>
-        </div>
-        <div class="agent-body" id="body-defense"><p class="agent-placeholder">Defense arguments will appear here…</p></div>
-      </div>
-
-      <!-- Prosecution -->
-      <div class="agent-card prosecution" id="card-prosecution">
-        <div class="agent-card-accent"></div>
-        <div class="agent-header">
-          <div class="agent-seal">PRO</div>
-          <div class="agent-meta"><div class="agent-name">Prosecution Agent</div><div class="agent-role">Counsel for the Plaintiff</div></div>
-          <div class="agent-status status-idle" id="status-prosecution">Standby</div>
-        </div>
-        <div class="agent-body" id="body-prosecution"><p class="agent-placeholder">Prosecution arguments will appear here…</p></div>
-      </div>
-
-      <!-- Judge -->
-      <div class="agent-card judge full-width" id="card-judge">
-        <div class="agent-card-accent"></div>
-        <div class="agent-header">
-          <div class="agent-seal">JDG</div>
-          <div class="agent-meta"><div class="agent-name">Judge Agent</div><div class="agent-role">Impartial Adjudicator</div></div>
-          <div class="agent-status status-idle" id="status-judge">Standby</div>
-        </div>
-        <div class="agent-body" id="body-judge"><p class="agent-placeholder">The court is not yet in session…</p></div>
-        <div class="verdict-metrics" id="verdictMetrics" style="display:none">
-          <div class="metric-cell"><div class="metric-label">Ruling</div><div class="metric-value" id="m-ruling">—</div></div>
-          <div class="metric-cell"><div class="metric-label">Confidence</div><div class="metric-value" id="m-conf">—</div><div class="conf-bar-wrap"><div class="conf-bar-fill" id="confBar"></div></div></div>
-          <div class="metric-cell"><div class="metric-label">Key Finding</div><div class="metric-value finding-text" id="m-finding">—</div></div>
-        </div>
-      </div>
-
-      <!-- Appeals (hidden until requested) -->
-      <div class="agent-card appeals full-width" id="card-appeals" style="display:none">
-        <div class="agent-card-accent"></div>
-        <div class="agent-header">
-          <div class="agent-seal">APP</div>
-          <div class="agent-meta"><div class="agent-name">Appeals Agent</div><div class="agent-role">Appellate Review</div></div>
-          <div class="agent-status status-idle" id="status-appeals">Standby</div>
-        </div>
-        <div class="agent-body" id="body-appeals"><p class="agent-placeholder">Awaiting Judge's verdict…</p></div>
-      </div>
-
-    </div><!-- /agents-grid -->
-
-    <!-- Appeals Summary Card -->
-    <div class="appeals-summary" id="appealsCard" style="display:none">
-      <p class="section-label">Appeals Review</p>
-      <div class="appeals-metrics">
-        <div class="metric-cell"><div class="metric-label">Appeal Warranted</div><div class="metric-value" id="ap-warranted">—</div></div>
-        <div class="metric-cell"><div class="metric-label">Appeal Strength</div><div class="metric-value" id="ap-strength">—</div></div>
-        <div class="metric-cell"><div class="metric-label">Recommended Action</div><div class="metric-value finding-text" id="ap-action">—</div></div>
-      </div>
-      <div class="appeals-detail">
-        <p class="appeals-detail-label">Grounds for Appeal</p>
-        <div id="ap-grounds"></div>
-        <p class="appeals-detail-label" style="margin-top:1rem">Dissenting View</p>
-        <p id="ap-dissent" class="agent-body" style="padding:0; margin-top:0.4rem; font-style:italic; color:#6b5e4a"></p>
-      </div>
-    </div>
-
-  </main>
-</div><!-- /layout -->
-
-<footer>
-  LexAI &nbsp;·&nbsp; Multi-Agent Legal Reasoning &nbsp;·&nbsp; Frontend → Backend → Agents → LLM &nbsp;·&nbsp; Not Legal Advice
-</footer>
-
-<script src="presets.js"></script>
-<script src="ui.js"></script>
-<script src="api.js"></script>
-<script src="app.js"></script>
+  <script src="presets.js?v=20260425c"></script>
+  <script src="ui.js?v=20260425c"></script>
+  <script src="api.js?v=20260425c"></script>
+  <script src="app.js?v=20260425c"></script>
 </body>
 </html>

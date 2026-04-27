@@ -124,5 +124,53 @@
     "content": "Ownership disputes over creative or technical work often depend on authorship, assignment clauses, employment status, and whether the work was created within the scope of employment or commissioned under valid written terms.",
     "keywords": ["copyright", "ownership", "work-product", "assignment", "employment", "scope", "commissioned"],
     "source": "legal_corpus.json"
+  },
+  {
+    "id": "ipc-378-theft",
+    "title": "IPC Section 378 - Theft",
+    "citation": "Indian Penal Code, 1860 - Section 378",
+    "content": "Theft concerns dishonest moving of movable property out of a person's possession without consent. Key issues often include dishonest intention, possession, lack of consent, and whether the property was actually moved or appropriated.",
+    "keywords": ["ipc 378", "theft", "dishonest intention", "movable property", "consent", "appropriation"],
+    "source": "Indian Penal Code"
+  },
+  {
+    "id": "ipc-405-breach-of-trust",
+    "title": "IPC Section 405 - Criminal Breach of Trust",
+    "citation": "Indian Penal Code, 1860 - Section 405",
+    "content": "Criminal breach of trust applies where property is entrusted to a person and that person dishonestly misappropriates, converts, uses, or disposes of it in violation of a legal direction or contract. Entrustment and dishonest misuse are central elements.",
+    "keywords": ["ipc 405", "criminal breach of trust", "entrustment", "misappropriation", "property", "dishonest use"],
+    "source": "Indian Penal Code"
+  },
+  {
+    "id": "ipc-415-cheating",
+    "title": "IPC Section 415 - Cheating",
+    "citation": "Indian Penal Code, 1860 - Section 415",
+    "content": "Cheating generally requires deception of a person together with fraudulent or dishonest inducement to deliver property, consent to retention of property, or to do or omit an act causing damage or harm. The timing of dishonest intention can be crucial.",
+    "keywords": ["ipc 415", "cheating", "deception", "dishonest inducement", "fraudulent", "property"],
+    "source": "Indian Penal Code"
+  },
+  {
+    "id": "ipc-420-cheating-delivery",
+    "title": "IPC Section 420 - Cheating and Dishonestly Inducing Delivery of Property",
+    "citation": "Indian Penal Code, 1860 - Section 420",
+    "content": "Section 420 addresses cheating linked to delivery of property or alteration or destruction of valuable security. Courts often examine false representations, intent at inception, reliance, and whether delivery was induced by the deception.",
+    "keywords": ["ipc 420", "cheating", "delivery of property", "false representation", "valuable security", "inducement"],
+    "source": "Indian Penal Code"
+  },
+  {
+    "id": "ipc-463-forgery",
+    "title": "IPC Section 463 - Forgery",
+    "citation": "Indian Penal Code, 1860 - Section 463",
+    "content": "Forgery concerns making a false document or electronic record with intent to cause damage, support a claim, induce parting with property, or commit fraud. Authorship, falsity, intent, and use of the document are common issues.",
+    "keywords": ["ipc 463", "forgery", "false document", "electronic record", "fraud", "intent"],
+    "source": "Indian Penal Code"
+  },
+  {
+    "id": "ipc-499-defamation",
+    "title": "IPC Section 499 - Defamation",
+    "citation": "Indian Penal Code, 1860 - Section 499",
+    "content": "Defamation involves making or publishing imputations concerning a person with intent to harm, or knowing or having reason to believe that the imputation will harm, that person's reputation, subject to statutory exceptions such as truth for public good and privilege.",
+    "keywords": ["ipc 499", "defamation", "imputation", "reputation", "publication", "exceptions"],
+    "source": "Indian Penal Code"
   }
 ]
