@@ -1,4 +1,5 @@
-from agents.base_agent import BaseAgent, parse_json_response
+from agents.base_agent import BaseAgent
+from utils.fallback_reasoning import heuristic_verdict, parse_json_object
 
 
 class JudgeAgent(BaseAgent):
@@ -40,17 +41,9 @@ Confidence must be an integer from 0 to 100."""
         style_hint: str = "",
     ) -> dict:
         raw = await self.run(self.build_prompt(case, research, defense, prosecution, scoring, style_hint))
-        verdict = parse_json_response(
-            raw,
-            {
-                "ruling": "Undetermined",
-                "confidence": 50,
-                "reasoning": raw[:400],
-                "key_finding": "",
-                "winning_side": "balanced",
-                "cited_basis": "",
-            },
-        )
+        verdict = parse_json_object(raw)
+        if verdict is None:
+            verdict = heuristic_verdict(case, research, scoring)
         verdict["confidence"] = int(float(verdict.get("confidence", 50)))
         verdict["ruling"] = verdict.get("ruling", "Undetermined")
         verdict["reasoning"] = verdict.get("reasoning", "")
@@ -60,10 +53,4 @@ Confidence must be an integer from 0 to 100."""
         return verdict
 
     def _fallback_response(self, prompt: str) -> str:
-        return (
-            '{"ruling":"Undetermined","confidence":50,'
-            '"reasoning":"Fallback verdict generated because no LLM is configured.",'
-            '"key_finding":"No live model configured.",'
-            '"winning_side":"balanced",'
-            '"cited_basis":"No live model configured."}'
-        )
+        return ""

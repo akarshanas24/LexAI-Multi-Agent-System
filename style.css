@@ -60,6 +60,12 @@ select {
   appearance: none;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: auto;
+  accent-color: var(--accent);
+}
+
 button {
   border: 0;
   background: none;
@@ -494,9 +500,7 @@ p {
 .toggle-card input {
   width: 1.05rem;
   height: 1.05rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 0.3rem;
-  background: #fff;
+  cursor: pointer;
 }
 
 .button-row {
@@ -1093,6 +1097,7 @@ p {
 .inline-switch input {
   width: 1.1rem;
   height: 1.1rem;
+  cursor: pointer;
 }
 
 .compact-textarea {

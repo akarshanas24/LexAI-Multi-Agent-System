@@ -31,6 +31,7 @@ Output (JSON):
 
 import json
 from agents.base_agent import BaseAgent
+from utils.fallback_reasoning import heuristic_appeal
 
 
 class AppealsAgent(BaseAgent):
@@ -79,6 +80,7 @@ Review the verdict above and render your appellate assessment as JSON."""
         defense: str,
         prosecution: str,
         verdict: dict,
+        scoring: dict | None = None,
         style_hint: str = "",
     ) -> dict:
         """
@@ -112,13 +114,7 @@ Review the verdict above and render your appellate assessment as JSON."""
         try:
             result = json.loads(cleaned)
         except json.JSONDecodeError:
-            result = {
-                "appeal_warranted": False,
-                "grounds": [],
-                "recommended_action": "Uphold verdict",
-                "appeal_strength": 0,
-                "dissenting_view": raw[:400],
-            }
+            result = heuristic_appeal(case, verdict, scoring)
 
         result["appeal_strength"] = int(float(result.get("appeal_strength", 0)))
         return result

@@ -2,6 +2,7 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from sqlalchemy.exc import OperationalError
 
 from rag.knowledge_base import LegalKnowledgeBase
 
@@ -100,3 +101,21 @@ class TestDashboardFeatures:
 
             deleted = await auth_client.delete(f"/knowledge/documents/{document['id']}")
             assert deleted.status_code == 204
+
+    async def test_pdf_download_survives_activity_log_lock(self, auth_client):
+        with patch("api.routes._orchestrator") as mock_orch:
+            mock_orch.run = AsyncMock(return_value=MOCK_RESULT)
+            response = await auth_client.post("/analyze", json={
+                "case_description": "A cheating complaint involving inducement and delivery of funds.",
+                "title": "Cheating Case",
+            })
+        assert response.status_code == 200
+        case_id = response.json()["case_id"]
+
+        locked_error = OperationalError("INSERT INTO activity_logs ...", {}, Exception("database is locked"))
+        with patch("api.routes.create_activity_log", AsyncMock(side_effect=locked_error)):
+            pdf_response = await auth_client.get(f"/cases/{case_id}/pdf")
+
+        assert pdf_response.status_code == 200
+        assert pdf_response.headers["content-type"] == "application/pdf"
+        assert pdf_response.content.startswith(b"%PDF")

@@ -1,4 +1,5 @@
 from agents.base_agent import BaseAgent
+from utils.fallback_reasoning import extract_labeled_section, heuristic_research_brief
 
 
 class ResearchAgent(BaseAgent):
@@ -18,3 +19,16 @@ class ResearchAgent(BaseAgent):
             f"Case:\n{case}\n\n"
             f"Retrieved context:\n{context}"
         )
+
+    def _fallback_response(self, prompt: str) -> str:
+        case = extract_labeled_section(
+            prompt,
+            "Case:",
+            ["Retrieved context:", "Reasoning style preference:"],
+        )
+        context = extract_labeled_section(
+            prompt,
+            "Retrieved context:",
+            ["Reasoning style preference:"],
+        )
+        return heuristic_research_brief(case, context)

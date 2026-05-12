@@ -1,4 +1,5 @@
 from agents.base_agent import BaseAgent
+from utils.fallback_reasoning import extract_labeled_section, heuristic_argument
 
 
 class ProsecutionAgent(BaseAgent):
@@ -33,3 +34,22 @@ class ProsecutionAgent(BaseAgent):
             f"Research:\n{research}"
             f"{opposing_block}"
         )
+
+    def _fallback_response(self, prompt: str) -> str:
+        case = extract_labeled_section(
+            prompt,
+            "Case:",
+            ["Research:", "Reasoning style preference:"],
+        )
+        research = extract_labeled_section(
+            prompt,
+            "Research:",
+            ["Opposing defense argument to address:", "Reasoning style preference:"],
+        )
+        opposing = extract_labeled_section(
+            prompt,
+            "Opposing defense argument to address:",
+            ["Reasoning style preference:"],
+        )
+        round_name = "rebuttal" if "rebuttal" in prompt.lower() else "opening"
+        return heuristic_argument("prosecution", case, research, opposing, round_name)

@@ -1,6 +1,7 @@
 import json
 
 from config.settings import settings
+from utils.logger import logger
 
 try:
     import httpx
@@ -61,33 +62,65 @@ class BaseAgent:
     async def _run_ollama(self, prompt: str) -> str | None:
         if not settings.OLLAMA_ENABLED or httpx is None:
             return None
+        models_to_try: list[str] = []
+        for model in (settings.OLLAMA_MODEL, *settings.OLLAMA_FALLBACK_MODELS):
+            if model and model not in models_to_try:
+                models_to_try.append(model)
 
-        payload = {
-            "model": settings.OLLAMA_MODEL,
-            "prompt": prompt,
-            "system": self.SYSTEM_PROMPT,
-            "stream": False,
-            "options": {
-                "temperature": 0.3,
-            },
-        }
+        async with httpx.AsyncClient(timeout=settings.OLLAMA_TIMEOUT_SECONDS) as client:
+            for model_name in models_to_try:
+                payload = {
+                    "model": model_name,
+                    "prompt": prompt,
+                    "system": self.SYSTEM_PROMPT,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.3,
+                    },
+                }
+                try:
+                    response = await client.post(
+                        f"{settings.OLLAMA_BASE_URL}/api/generate",
+                        json=payload,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                except Exception as exc:
+                    logger.warning(
+                        f"{self.NAME} Ollama request failed for model={model_name}: "
+                        f"{type(exc).__name__}: {exc}"
+                    )
+                    continue
 
-        try:
-            async with httpx.AsyncClient(timeout=settings.OLLAMA_TIMEOUT_SECONDS) as client:
-                response = await client.post(
-                    f"{settings.OLLAMA_BASE_URL}/api/generate",
-                    json=payload,
-                )
-                response.raise_for_status()
-        except Exception:
-            return None
+                text = (data.get("response") or "").strip()
+                if text:
+                    if model_name != settings.OLLAMA_MODEL:
+                        logger.warning(
+                            f"{self.NAME} fell back from model={settings.OLLAMA_MODEL} "
+                            f"to model={model_name}"
+                        )
+                    return text
 
-        data = response.json()
-        text = (data.get("response") or "").strip()
-        return text or None
+                logger.warning(f"{self.NAME} received an empty Ollama response for model={model_name}")
+
+        return None
+
+    @staticmethod
+    def _prompt_preview(prompt: str, limit: int = 280) -> str:
+        compact = " ".join(line.strip() for line in prompt.splitlines() if line.strip())
+        if len(compact) <= limit:
+            return compact
+        cutoff = compact.rfind(" ", 0, limit)
+        if cutoff < max(80, limit // 2):
+            cutoff = limit
+        return compact[:cutoff].rstrip(" ,;:") + "..."
 
     def _fallback_response(self, prompt: str) -> str:
-        return f"{self.NAME} placeholder response for: {prompt[:160]}"
+        return (
+            f"{self.NAME} is running in placeholder mode because no live LLM backend is available.\n\n"
+            "Start Ollama or configure `ANTHROPIC_API_KEY` to generate a full response.\n\n"
+            f"Prompt preview:\n{self._prompt_preview(prompt)}"
+        )
 
 
 def parse_json_response(raw: str, default: dict) -> dict:

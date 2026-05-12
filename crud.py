@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 from typing import Any, List, Optional
 
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -28,8 +28,37 @@ async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User
     return result.scalar_one_or_none()
 
 
+async def get_user_by_username_ci(db: AsyncSession, username: str) -> Optional[User]:
+    normalized = username.strip().lower()
+    result = await db.execute(
+        select(User).where(func.lower(User.username) == normalized)
+    )
+    return result.scalar_one_or_none()
+
+
 async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_email_ci(db: AsyncSession, email: str) -> Optional[User]:
+    normalized = email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == normalized))
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_login_identifier(
+    db: AsyncSession, identifier: str
+) -> Optional[User]:
+    normalized = identifier.strip().lower()
+    result = await db.execute(
+        select(User).where(
+            or_(
+                func.lower(User.username) == normalized,
+                func.lower(User.email) == normalized,
+            )
+        )
+    )
     return result.scalar_one_or_none()
 
 

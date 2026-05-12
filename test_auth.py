@@ -1,5 +1,8 @@
 """tests/test_auth.py — Authentication endpoint tests"""
 import pytest
+from unittest.mock import AsyncMock, patch
+
+from sqlalchemy.exc import OperationalError
 
 
 @pytest.mark.asyncio
@@ -35,12 +38,41 @@ class TestRegister:
 @pytest.mark.asyncio
 class TestLogin:
 
+    async def test_reset_password_then_login(self, client):
+        reset = await client.post(
+            "/auth/reset-password",
+            json={"identifier": "testuser", "password": "newpass123"},
+        )
+        assert reset.status_code == 200
+        assert "Password updated" in reset.json()["message"]
+
+        old_login = await client.post("/auth/login", data={"username":"testuser","password":"testpass123"})
+        assert old_login.status_code == 401
+
+        new_login = await client.post("/auth/login", data={"username":"testuser","password":"newpass123"})
+        assert new_login.status_code == 200
+
+    async def test_reset_password_unknown_user(self, client):
+        reset = await client.post(
+            "/auth/reset-password",
+            json={"identifier": "ghost", "password": "newpass123"},
+        )
+        assert reset.status_code == 404
+
     async def test_login_success(self, client):
         r = await client.post("/auth/login", data={"username":"testuser","password":"testpass123"})
         assert r.status_code == 200
         d = r.json()
         assert "access_token" in d
         assert d["token_type"] == "bearer"
+
+    async def test_login_with_email(self, client):
+        r = await client.post("/auth/login", data={"username":"test@lexai.dev","password":"testpass123"})
+        assert r.status_code == 200
+
+    async def test_login_username_case_insensitive(self, client):
+        r = await client.post("/auth/login", data={"username":"TestUser","password":"testpass123"})
+        assert r.status_code == 200
 
     async def test_wrong_password(self, client):
         r = await client.post("/auth/login", data={"username":"testuser","password":"wrong"})
@@ -49,6 +81,13 @@ class TestLogin:
     async def test_unknown_user(self, client):
         r = await client.post("/auth/login", data={"username":"ghost","password":"x"})
         assert r.status_code == 401
+
+    async def test_login_survives_activity_log_lock(self, client):
+        locked_error = OperationalError("INSERT INTO activity_logs ...", {}, Exception("database is locked"))
+        with patch("routes.create_activity_log", AsyncMock(side_effect=locked_error)):
+            r = await client.post("/auth/login", data={"username":"testuser","password":"testpass123"})
+        assert r.status_code == 200
+        assert "access_token" in r.json()
 
 
 @pytest.mark.asyncio

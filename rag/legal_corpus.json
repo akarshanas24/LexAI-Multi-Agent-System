@@ -1,128 +1,273 @@
 [
   {
-    "title": "Contract Law Fundamentals",
-    "citation": "Restatement (Second) of Contracts",
-    "content": "Contract disputes turn on offer, acceptance, consideration, performance, breach, mitigation, and provable damages. Courts often compare the promised deliverable against what was actually delivered and whether the non-breaching party contributed to delay.",
-    "keywords": ["contract", "breach", "payment", "consideration", "damages", "mitigation", "deadline"],
-    "source": "legal_corpus.json"
-  },
-  {
+    "id": "ef408b90-9150-43f5-9195-ded65efb9eea",
     "title": "Material Breach and Substantial Performance",
     "citation": "Common Law Contract Remedies",
     "content": "A material breach is a failure serious enough to defeat the essential purpose of the agreement. By contrast, substantial performance may allow partial recovery when the core obligation was largely completed and remaining defects can be compensated through damages.",
-    "keywords": ["material", "breach", "substantial", "performance", "contractor", "delay", "defect"],
+    "keywords": [
+      "material",
+      "breach",
+      "substantial",
+      "performance",
+      "contractor",
+      "delay",
+      "defect"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "de70c841-41ee-4934-9d96-9f60b845fc76",
     "title": "Trade Secret Misappropriation",
     "citation": "Uniform Trade Secrets Act",
     "content": "Trade secret claims examine whether the information had independent economic value from secrecy, whether reasonable secrecy measures were used, and whether acquisition or use was improper. Source code, proprietary models, and confidential workflows are common examples.",
-    "keywords": ["trade", "secret", "code", "confidential", "misappropriation", "developer", "competitor"],
+    "keywords": [
+      "trade",
+      "secret",
+      "code",
+      "confidential",
+      "misappropriation",
+      "developer",
+      "competitor"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "26c6b661-4e47-44d1-83fa-32d1c3b23b0e",
     "title": "Confidential Information and Non-Disclosure Duties",
     "citation": "Employment and Confidentiality Agreements",
     "content": "Confidentiality disputes often turn on the scope of the agreement, the employer's handling of sensitive material, access restrictions, and whether the challenged information was already public or independently developed. Audit logs and repository access records can be important evidence.",
-    "keywords": ["nda", "confidentiality", "agreement", "repository", "access", "independent", "public"],
+    "keywords": [
+      "nda",
+      "confidentiality",
+      "agreement",
+      "repository",
+      "access",
+      "independent",
+      "public"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "25f0155f-4f55-48b4-bd95-4715368f816a",
     "title": "Wrongful Termination and Retaliation",
     "citation": "Employment Retaliation Doctrine",
     "content": "Employment retaliation disputes focus on protected activity, employer knowledge, temporal proximity, prior performance documentation, and whether the stated reason for termination is pretextual. Whistleblower complaints and internal reports can become central evidence.",
-    "keywords": ["employee", "termination", "retaliation", "whistleblower", "performance", "employer"],
+    "keywords": [
+      "employee",
+      "termination",
+      "retaliation",
+      "whistleblower",
+      "performance",
+      "employer"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "69e79d22-8ce9-4743-93ce-9b820255a85b",
     "title": "Workplace Investigation and Due Process",
     "citation": "Internal Disciplinary Procedure Principles",
     "content": "When an employer disciplines or dismisses a worker after alleged misconduct, decision makers often assess whether there was notice of the allegations, an opportunity to respond, consistent treatment of comparable employees, and adequate factual investigation before termination.",
-    "keywords": ["discipline", "termination", "investigation", "notice", "response", "misconduct", "due-process"],
+    "keywords": [
+      "discipline",
+      "termination",
+      "investigation",
+      "notice",
+      "response",
+      "misconduct",
+      "due-process"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "298fdbc5-0dc5-468b-a146-70a124e61bae",
     "title": "Fraud and Financial Misrepresentation",
     "citation": "Common Law Fraud",
     "content": "Fraud claims generally require a material misrepresentation, knowledge of falsity, intent to induce reliance, actual reliance, causation, and measurable damages. Written statements, omitted facts, and advisor communications can all be relevant.",
-    "keywords": ["fraud", "financial", "advisor", "misrepresentation", "reliance", "damages", "investor"],
+    "keywords": [
+      "fraud",
+      "financial",
+      "advisor",
+      "misrepresentation",
+      "reliance",
+      "damages",
+      "investor"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "c5970d2e-6e1a-4ab6-b030-fe893f056bb4",
     "title": "Securities-Style Disclosure Duties",
     "citation": "Investor Protection Principles",
     "content": "Investment and advisory disputes often examine whether material risks were disclosed, whether statements about returns or safety were misleading, and whether a fiduciary or advisory relationship created heightened duties of candor and care.",
-    "keywords": ["investor", "disclosure", "risk", "fiduciary", "returns", "advisor", "securities"],
+    "keywords": [
+      "investor",
+      "disclosure",
+      "risk",
+      "fiduciary",
+      "returns",
+      "advisor",
+      "securities"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "6ee78210-8582-4439-9f7e-120befc812b3",
     "title": "Criminal Burden of Proof",
     "citation": "Due Process Standard",
     "content": "In criminal-style adjudication, the prosecution must prove guilt beyond a reasonable doubt. Conflicting testimony, broken chains of custody, weak identification evidence, and alternative explanations all reduce confidence in conviction.",
-    "keywords": ["criminal", "reasonable", "doubt", "evidence", "prosecution", "guilty", "identification"],
+    "keywords": [
+      "criminal",
+      "reasonable",
+      "doubt",
+      "evidence",
+      "prosecution",
+      "guilty",
+      "identification"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "242150ba-3662-4538-82b4-a9a18f18b0b3",
     "title": "Civil Burden of Proof",
     "citation": "Preponderance of the Evidence",
     "content": "In civil disputes, the plaintiff typically prevails by showing that its version of events is more likely than not. Documentary consistency, contemporaneous records, and credible witness accounts often outweigh speculation.",
-    "keywords": ["civil", "preponderance", "plaintiff", "liable", "records", "witness", "damages"],
+    "keywords": [
+      "civil",
+      "preponderance",
+      "plaintiff",
+      "liable",
+      "records",
+      "witness",
+      "damages"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "d40b2afb-2a88-4bbd-b83c-432fff929217",
     "title": "Circumstantial Evidence and Inference",
     "citation": "Evidence Evaluation Principles",
     "content": "Courts may rely on circumstantial evidence when it supports a reasonable inference, but they often compare competing explanations and assess whether the inference is stronger than innocent alternatives. Digital traces, timestamps, and unusual access patterns can be highly probative.",
-    "keywords": ["circumstantial", "inference", "digital", "timestamp", "access", "evidence", "alternative"],
+    "keywords": [
+      "circumstantial",
+      "inference",
+      "digital",
+      "timestamp",
+      "access",
+      "evidence",
+      "alternative"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "e15bdd1c-efa6-464e-b3a7-6d6680b914c8",
     "title": "Electronic Records and Authentication",
     "citation": "Digital Evidence Principles",
     "content": "Emails, chats, logs, and system records usually require authentication showing they are what the offering party claims. Metadata, custodial testimony, hashing, and chain-of-custody practices strengthen admissibility and reliability.",
-    "keywords": ["electronic", "email", "chat", "log", "metadata", "authentication", "chain-of-custody"],
+    "keywords": [
+      "electronic",
+      "email",
+      "chat",
+      "log",
+      "metadata",
+      "authentication",
+      "chain-of-custody"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "8d3c618b-1ede-44a4-b022-5460f5ec2bed",
     "title": "Search, Seizure, and Privacy Interests",
     "citation": "Constitutional Privacy and Search Principles",
     "content": "Government access to private spaces, devices, or communications can trigger scrutiny over reasonable expectation of privacy, consent, warrants, and the scope of authorized searches. Evidence obtained through unlawful intrusion may face exclusion challenges in some settings.",
-    "keywords": ["search", "seizure", "privacy", "warrant", "consent", "device", "communications"],
+    "keywords": [
+      "search",
+      "seizure",
+      "privacy",
+      "warrant",
+      "consent",
+      "device",
+      "communications"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "44d7aac5-7525-49b9-87a5-457e9bf21bfd",
     "title": "Procedural Fairness in Adjudication",
     "citation": "Natural Justice and Fair Hearing Principles",
     "content": "Fair adjudication usually requires notice, a meaningful chance to respond, an impartial decision maker, and reasoning connected to the evidence. A decision that ignores major arguments or rests on undisclosed material may face appellate or review challenges.",
-    "keywords": ["procedural", "fairness", "notice", "hearing", "impartial", "reasoning", "appeal"],
+    "keywords": [
+      "procedural",
+      "fairness",
+      "notice",
+      "hearing",
+      "impartial",
+      "reasoning",
+      "appeal"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "c3d1d1fc-a5ec-4fa3-acc6-06222d0ab759",
     "title": "Negligence and Duty of Care",
     "citation": "General Tort Principles",
     "content": "Negligence claims ask whether a duty of care existed, whether the defendant breached the applicable standard of care, whether that breach caused the harm, and whether damages were reasonably foreseeable. Industry practices and expert evidence often help define the standard.",
-    "keywords": ["negligence", "duty", "care", "breach", "causation", "foreseeable", "tort"],
+    "keywords": [
+      "negligence",
+      "duty",
+      "care",
+      "breach",
+      "causation",
+      "foreseeable",
+      "tort"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "ec31a16b-2242-4368-97e0-ca4c5e742eba",
     "title": "Defamation and Reputation Harm",
     "citation": "Defamation Principles",
     "content": "Defamation disputes focus on whether a false factual statement was published to others, whether it injured reputation, and whether defenses such as truth, privilege, or opinion apply. Public-figure cases may impose additional fault requirements.",
-    "keywords": ["defamation", "reputation", "false", "publication", "truth", "privilege", "opinion"],
+    "keywords": [
+      "defamation",
+      "reputation",
+      "false",
+      "publication",
+      "truth",
+      "privilege",
+      "opinion"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "15f56620-d349-4351-8e4f-222da3d1a7a1",
     "title": "Consumer Protection and Unfair Practices",
     "citation": "Consumer Protection Principles",
     "content": "Consumer protection disputes often examine unfair trade practices, deceptive marketing, hidden charges, and unequal bargaining power. Remedies may include refunds, statutory damages, injunctions, and corrective disclosures.",
-    "keywords": ["consumer", "deceptive", "marketing", "refund", "charges", "unfair", "statutory"],
+    "keywords": [
+      "consumer",
+      "deceptive",
+      "marketing",
+      "refund",
+      "charges",
+      "unfair",
+      "statutory"
+    ],
     "source": "legal_corpus.json"
   },
   {
+    "id": "4dc77694-46dd-449c-aa7b-7b6439c7aa43",
     "title": "Intellectual Property and Ownership of Work Product",
     "citation": "Copyright and Work-for-Hire Principles",
     "content": "Ownership disputes over creative or technical work often depend on authorship, assignment clauses, employment status, and whether the work was created within the scope of employment or commissioned under valid written terms.",
-    "keywords": ["copyright", "ownership", "work-product", "assignment", "employment", "scope", "commissioned"],
+    "keywords": [
+      "copyright",
+      "ownership",
+      "work-product",
+      "assignment",
+      "employment",
+      "scope",
+      "commissioned"
+    ],
     "source": "legal_corpus.json"
   },
   {
@@ -130,7 +275,14 @@
     "title": "IPC Section 378 - Theft",
     "citation": "Indian Penal Code, 1860 - Section 378",
     "content": "Theft concerns dishonest moving of movable property out of a person's possession without consent. Key issues often include dishonest intention, possession, lack of consent, and whether the property was actually moved or appropriated.",
-    "keywords": ["ipc 378", "theft", "dishonest intention", "movable property", "consent", "appropriation"],
+    "keywords": [
+      "ipc 378",
+      "theft",
+      "dishonest intention",
+      "movable property",
+      "consent",
+      "appropriation"
+    ],
     "source": "Indian Penal Code"
   },
   {
@@ -138,15 +290,14 @@
     "title": "IPC Section 405 - Criminal Breach of Trust",
     "citation": "Indian Penal Code, 1860 - Section 405",
     "content": "Criminal breach of trust applies where property is entrusted to a person and that person dishonestly misappropriates, converts, uses, or disposes of it in violation of a legal direction or contract. Entrustment and dishonest misuse are central elements.",
-    "keywords": ["ipc 405", "criminal breach of trust", "entrustment", "misappropriation", "property", "dishonest use"],
-    "source": "Indian Penal Code"
-  },
-  {
-    "id": "ipc-415-cheating",
-    "title": "IPC Section 415 - Cheating",
-    "citation": "Indian Penal Code, 1860 - Section 415",
-    "content": "Cheating generally requires deception of a person together with fraudulent or dishonest inducement to deliver property, consent to retention of property, or to do or omit an act causing damage or harm. The timing of dishonest intention can be crucial.",
-    "keywords": ["ipc 415", "cheating", "deception", "dishonest inducement", "fraudulent", "property"],
+    "keywords": [
+      "ipc 405",
+      "criminal breach of trust",
+      "entrustment",
+      "misappropriation",
+      "property",
+      "dishonest use"
+    ],
     "source": "Indian Penal Code"
   },
   {
@@ -154,7 +305,14 @@
     "title": "IPC Section 420 - Cheating and Dishonestly Inducing Delivery of Property",
     "citation": "Indian Penal Code, 1860 - Section 420",
     "content": "Section 420 addresses cheating linked to delivery of property or alteration or destruction of valuable security. Courts often examine false representations, intent at inception, reliance, and whether delivery was induced by the deception.",
-    "keywords": ["ipc 420", "cheating", "delivery of property", "false representation", "valuable security", "inducement"],
+    "keywords": [
+      "ipc 420",
+      "cheating",
+      "delivery of property",
+      "false representation",
+      "valuable security",
+      "inducement"
+    ],
     "source": "Indian Penal Code"
   },
   {
@@ -162,7 +320,14 @@
     "title": "IPC Section 463 - Forgery",
     "citation": "Indian Penal Code, 1860 - Section 463",
     "content": "Forgery concerns making a false document or electronic record with intent to cause damage, support a claim, induce parting with property, or commit fraud. Authorship, falsity, intent, and use of the document are common issues.",
-    "keywords": ["ipc 463", "forgery", "false document", "electronic record", "fraud", "intent"],
+    "keywords": [
+      "ipc 463",
+      "forgery",
+      "false document",
+      "electronic record",
+      "fraud",
+      "intent"
+    ],
     "source": "Indian Penal Code"
   },
   {
@@ -170,7 +335,14 @@
     "title": "IPC Section 499 - Defamation",
     "citation": "Indian Penal Code, 1860 - Section 499",
     "content": "Defamation involves making or publishing imputations concerning a person with intent to harm, or knowing or having reason to believe that the imputation will harm, that person's reputation, subject to statutory exceptions such as truth for public good and privilege.",
-    "keywords": ["ipc 499", "defamation", "imputation", "reputation", "publication", "exceptions"],
+    "keywords": [
+      "ipc 499",
+      "defamation",
+      "imputation",
+      "reputation",
+      "publication",
+      "exceptions"
+    ],
     "source": "Indian Penal Code"
   }
 ]

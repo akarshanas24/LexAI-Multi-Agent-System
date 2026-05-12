@@ -39,6 +39,75 @@ class TestJudgeAgent:
         assert isinstance(v["confidence"], int)
         assert v["confidence"] == 82
 
+    async def test_heuristic_fallback_uses_scoring_signal(self):
+        from agents.judge_agent import JudgeAgent
+        agent = JudgeAgent()
+        with patch.object(agent, "run", AsyncMock(return_value="NOT JSON")):
+            verdict = await agent.run_structured(
+                "An employee allegedly copied confidential source code before joining a competitor.",
+                "Retrieved materials discuss trade secret protection and documentary proof.",
+                "The engineer says the work was independent.",
+                "The employer cites copied code and documented access logs.",
+                {"defense_score": 41, "prosecution_score": 68},
+            )
+        assert verdict["ruling"] == "Liable"
+        assert verdict["confidence"] > 50
+
+
+@pytest.mark.asyncio
+class TestScoringAgent:
+
+    async def test_heuristic_fallback_not_stuck_at_fifty_fifty(self):
+        from agents.scoring_agent import ScoringAgent
+        agent = ScoringAgent()
+        with patch.object(agent, "run", AsyncMock(return_value="NOT JSON")):
+            scoring = await agent.run_structured(
+                "A company alleges an engineer copied proprietary code and used it at a competitor.",
+                "Trade secret rules and documented access logs are discussed in the retrieved materials.",
+                "The engineer denies wrongdoing and says the work was independently built from prior work.",
+                "The employer points to copied files, written records, and documented damages.",
+            )
+        assert scoring["defense_score"] != 50 or scoring["prosecution_score"] != 50
+        assert scoring["stronger_side"] in {"defense", "prosecution", "balanced"}
+
+    async def test_equal_model_scores_use_stronger_side_tiebreak(self):
+        from agents.scoring_agent import ScoringAgent
+        agent = ScoringAgent()
+        mock = json.dumps({
+            "defense_score": 62,
+            "prosecution_score": 62,
+            "stronger_side": "prosecution",
+            "explanation": "The prosecution is slightly more grounded in the documents.",
+        })
+        with patch.object(agent, "run", AsyncMock(return_value=mock)):
+            scoring = await agent.run_structured(
+                "A company alleges an engineer copied proprietary code and used it at a competitor.",
+                "Trade secret rules and documented access logs are discussed in the retrieved materials.",
+                "The engineer denies wrongdoing and says the work was independently built from prior work.",
+                "The employer points to copied files, written records, and documented damages.",
+            )
+        assert scoring["prosecution_score"] > scoring["defense_score"]
+        assert scoring["stronger_side"] == "prosecution"
+
+    async def test_equal_model_scores_can_fall_back_to_heuristic_split(self):
+        from agents.scoring_agent import ScoringAgent
+        agent = ScoringAgent()
+        mock = json.dumps({
+            "defense_score": 60,
+            "prosecution_score": 60,
+            "stronger_side": "balanced",
+            "explanation": "Both sides appear similar.",
+        })
+        with patch.object(agent, "run", AsyncMock(return_value=mock)):
+            scoring = await agent.run_structured(
+                "A company alleges an engineer copied proprietary code, admitted retaining files, and used them at a competitor.",
+                "Trade secret rules, written records, witness accounts, and documented access logs are discussed in the retrieved materials.",
+                "The engineer says there was no intent and the terms were unclear.",
+                "The employer points to copied files, written records, documented damages, witness statements, and an admission.",
+            )
+        assert scoring["defense_score"] != scoring["prosecution_score"]
+        assert scoring["stronger_side"] in {"defense", "prosecution"}
+
 
 @pytest.mark.asyncio
 class TestAppealsAgent:
@@ -57,8 +126,9 @@ class TestAppealsAgent:
         agent = AppealsAgent()
         with patch.object(agent, "run", AsyncMock(return_value="NOT JSON")):
             r = await agent.run_structured("c","r","d","p",{"ruling":"Liable","confidence":70,"reasoning":".","key_finding":"."})
-        assert r["appeal_warranted"] is False
-        assert r["recommended_action"] == "Uphold verdict"
+        assert isinstance(r["appeal_warranted"], bool)
+        assert isinstance(r["grounds"], list)
+        assert r["recommended_action"] in {"Uphold verdict", "Remand for reconsideration", "Reduce confidence score"}
 
 
 @pytest.mark.asyncio

@@ -29,6 +29,14 @@ MOCK_STREAM_STAGES = [
     ("complete",    {"case_id": "mock-case-id"}),
 ]
 
+MOCK_APPEALS = {
+    "appeal_warranted": True,
+    "grounds": ["Procedural unfairness"],
+    "recommended_action": "Remand for reconsideration",
+    "appeal_strength": 68,
+    "dissenting_view": "The record leaves room for a different weighing of the evidence.",
+}
+
 
 @pytest.mark.asyncio
 class TestHealth:
@@ -70,6 +78,31 @@ class TestAnalyze:
         assert data["verdict"]["ruling"] == "Liable"
         assert isinstance(data["verdict"]["confidence"], (int, float))
         assert "case_id" in data
+
+    async def test_analyze_stream_includes_appeals_stage_when_enabled(self, auth_client):
+        async def fake_stream(*args, **kwargs):
+            assert kwargs["include_appeals"] is True
+            yield "research", MOCK_RESULT["research"]
+            yield "defense", MOCK_RESULT["defense"]
+            yield "prosecution", MOCK_RESULT["prosecution"]
+            yield "judge", MOCK_RESULT["verdict"]
+            yield "appeals", MOCK_APPEALS
+
+        with patch("api.routes._orchestrator") as mock_orch:
+            mock_orch.run_streaming = MagicMock(side_effect=lambda *args, **kwargs: fake_stream(*args, **kwargs))
+            response = await auth_client.post("/analyze/stream", json={
+                "case_description": "A developer was accused of stealing code.",
+                "title": "Code Theft Stream Test",
+                "include_appeals": True,
+            })
+
+        assert response.status_code == 200
+        lines = [line for line in response.text.splitlines() if line.startswith("data: ") and line != "data: [DONE]"]
+        payloads = [json.loads(line[6:]) for line in lines]
+        stages = [item["stage"] for item in payloads]
+        assert "appeals" in stages
+        appeals_payload = next(item["data"] for item in payloads if item["stage"] == "appeals")
+        assert appeals_payload["appeal_warranted"] is True
 
 
 @pytest.mark.asyncio
@@ -121,6 +154,13 @@ class TestCaseHistory:
     async def test_delete_nonexistent_case(self, auth_client):
         r = await auth_client.delete("/cases/does-not-exist")
         assert r.status_code == 404
+
+    async def test_download_case_pdf(self, auth_client):
+        case_id = await self._create_case(auth_client)
+        response = await auth_client.get(f"/cases/{case_id}/pdf")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/pdf"
+        assert len(response.content) > 1000
 
     async def test_cannot_access_another_users_case(self, auth_client, client):
         """A user should not be able to access another user's case."""

@@ -5,6 +5,8 @@ const state = {
   activityLogs: [],
   knowledgeDocuments: [],
   systemSettings: null,
+  activeRunIncludeAppeals: false,
+  isAnalyzing: false,
 };
 
 function showAuthModal(tab = "login") {
@@ -14,6 +16,10 @@ function showAuthModal(tab = "login") {
 
 function hideAuthModal() {
   $("authModal").style.display = "none";
+  clearAuthError();
+}
+
+function clearAuthError() {
   $("authError").textContent = "";
 }
 
@@ -22,6 +28,7 @@ function switchAuthTab(tab) {
   $("registerTab").style.display = tab === "register" ? "block" : "none";
   $("tabLogin").classList.toggle("active", tab === "login");
   $("tabRegister").classList.toggle("active", tab === "register");
+  clearAuthError();
 }
 
 function passwordByteLength(password) {
@@ -115,6 +122,11 @@ function doLogout() {
   showAuthModal("login");
 }
 
+function handleSessionExpired() {
+  doLogout();
+  showError("Your session expired. Please sign in again to delete cases or export PDFs.");
+}
+
 async function loadHistory() {
   if (!API.isLoggedIn()) return;
   const payload = await API.getCases();
@@ -162,7 +174,7 @@ async function loadKnowledgeBase() {
 function applyRuntimeSettings(settings) {
   state.systemSettings = settings;
   window.LEXAI_RUNTIME_SETTINGS = settings || {};
-  if (!state.activeCaseId && settings) {
+  if (!state.activeCaseId && !state.isAnalyzing && settings) {
     $("appealsToggle").checked = !!settings.default_include_appeals;
   }
 }
@@ -192,10 +204,13 @@ async function analyzeCase() {
     return;
   }
 
+  const includeAppeals = !!$("appealsToggle").checked;
+  state.activeRunIncludeAppeals = includeAppeals;
+
   const payload = {
     title: $("caseTitle").value.trim() || null,
     case_description: caseDescription,
-    include_appeals: $("appealsToggle").checked,
+    include_appeals: includeAppeals,
   };
 
   resetAnalysisUI();
@@ -203,6 +218,7 @@ async function analyzeCase() {
   switchResultsTab("debate");
   setSidebarActive("analyze");
   setAnalyzeLoading(true);
+  state.isAnalyzing = true;
   setLiveStatus("Analyzing case...");
   setStepState("research", "running");
   setAgentStatus("research", "Running");
@@ -238,7 +254,7 @@ async function analyzeCase() {
       } else if (stage === "judge") {
         renderVerdict(data, true);
         setStepState("judge", "done");
-        if ($("appealsToggle").checked) {
+        if (state.activeRunIncludeAppeals) {
           setStepState("appeals", "running");
           setAgentStatus("appeals", "Running");
           setLiveStatus("Running appeals review...");
@@ -261,6 +277,7 @@ async function analyzeCase() {
     showError(error.message);
     setLiveStatus("Analysis failed.");
   } finally {
+    state.isAnalyzing = false;
     setAnalyzeLoading(false);
   }
 }
@@ -269,6 +286,7 @@ async function loadCase(caseId) {
   try {
     const caseData = await API.getCase(caseId);
     state.activeCaseId = caseId;
+    state.activeRunIncludeAppeals = !!caseData.appeals;
     state.rounds = caseData.rounds || [];
     $("caseTitle").value = caseData.title || "";
     $("caseInput").value = caseData.case_description || "";
@@ -405,6 +423,7 @@ function clearAll() {
   $("pdfBtn").style.display = "none";
   state.rounds = [];
   state.activeCaseId = "";
+  state.activeRunIncludeAppeals = false;
   resetAnalysisUI();
 }
 
@@ -416,6 +435,8 @@ document.addEventListener("click", (event) => {
   if (panel.contains(event.target) || toggle.contains(event.target)) return;
   panel.style.display = "none";
 });
+
+window.addEventListener("lexai:session-expired", handleSessionExpired);
 
 (async function init() {
   resetAnalysisUI();

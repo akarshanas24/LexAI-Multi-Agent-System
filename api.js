@@ -43,6 +43,16 @@ const API = {
     return headers;
   },
 
+  async _readJsonResponse(response, fallbackMessage = "Invalid server response") {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(text.trim() || fallbackMessage);
+    }
+  },
+
   async _fetch(path, options = {}) {
     let response = null;
     let lastError = null;
@@ -68,15 +78,18 @@ const API = {
 
     if (response.status === 401) {
       this.clearToken();
+      window.dispatchEvent(new CustomEvent("lexai:session-expired"));
       throw new Error("Session expired");
     }
 
     if (!response.ok) {
       let message = `HTTP ${response.status}`;
       try {
-        const payload = await response.json();
-        message = payload.detail || message;
-      } catch {}
+        const payload = await this._readJsonResponse(response, message);
+        message = payload?.detail || message;
+      } catch (error) {
+        message = error.message || message;
+      }
       throw new Error(message);
     }
 
@@ -89,7 +102,16 @@ const API = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
     });
-    return response.json();
+    return this._readJsonResponse(response);
+  },
+
+  async resetPassword(identifier, password) {
+    const response = await this._fetch("/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, password }),
+    });
+    return this._readJsonResponse(response);
   },
 
   async login(username, password) {
@@ -112,18 +134,22 @@ const API = {
     }
 
     if (!response.ok) {
-      const payload = await response.json();
-      throw new Error(payload.detail || "Login failed");
+      try {
+        const payload = await this._readJsonResponse(response, "Login failed");
+        throw new Error(payload?.detail || "Login failed");
+      } catch (error) {
+        throw new Error(error.message || "Login failed");
+      }
     }
 
-    const data = await response.json();
+    const data = await this._readJsonResponse(response, "Login failed");
     this.setToken(data.access_token);
     return data;
   },
 
   async getMe() {
     const response = await this._fetch("/auth/me");
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async analyzeStream(payload, onStage) {
@@ -159,32 +185,32 @@ const API = {
 
   async getCases(limit = 50, offset = 0) {
     const response = await this._fetch(`/cases?limit=${limit}&offset=${offset}`);
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async getCase(caseId) {
     const response = await this._fetch(`/cases/${caseId}`);
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async getCaseEvidence(caseId) {
     const response = await this._fetch(`/cases/${caseId}/evidence`);
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async getAnalytics() {
     const response = await this._fetch("/analytics/summary");
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async getActivityLogs(limit = 50) {
     const response = await this._fetch(`/activity/logs?limit=${limit}`);
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async getKnowledgeDocuments() {
     const response = await this._fetch("/knowledge/documents");
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async saveKnowledgeDocument(payload) {
@@ -193,7 +219,7 @@ const API = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async deleteKnowledgeDocument(docId) {
@@ -202,7 +228,7 @@ const API = {
 
   async getSystemSettings() {
     const response = await this._fetch("/system/settings");
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async updateSystemSettings(payload) {
@@ -211,7 +237,7 @@ const API = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return response.json();
+    return this._readJsonResponse(response);
   },
 
   async deleteCase(caseId) {
@@ -225,12 +251,14 @@ const API = {
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = `lexai_${caseId.slice(0, 8)}.pdf`;
+    document.body.appendChild(anchor);
     anchor.click();
+    anchor.remove();
     URL.revokeObjectURL(url);
   },
 
   async health() {
-    const response = await fetch(this.BASE + "/health");
-    return response.json();
+    const response = await this._fetch("/health");
+    return this._readJsonResponse(response);
   },
 };

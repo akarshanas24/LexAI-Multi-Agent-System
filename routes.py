@@ -19,10 +19,43 @@ from auth.auth import (
     create_access_token, get_current_user,
 )
 from db.database import get_db
-from db.crud import create_activity_log, get_user_by_username, get_user_by_email, create_user
+from db.crud import (
+    create_activity_log,
+    get_user_by_username_ci,
+    get_user_by_email_ci,
+    get_user_by_login_identifier,
+    create_user,
+)
 from db.models import User
+from utils.logger import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+async def _try_create_activity_log(
+    db: AsyncSession,
+    user_id: str,
+    action: str,
+    description: str,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+    metadata: dict | None = None,
+) -> None:
+    try:
+        await create_activity_log(
+            db,
+            user_id,
+            action,
+            description,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            metadata=metadata,
+        )
+    except OperationalError:
+        logger.warning(
+            f"Skipped auth activity log action={action} entity_type={entity_type} "
+            f"entity_id={entity_id} because the database was busy."
+        )
 
 
 # ── Schemas ────────────────────────────────────────────
@@ -43,6 +76,11 @@ class UserResponse(BaseModel):
     email: str
 
 
+class ResetPasswordRequest(BaseModel):
+    identifier: str
+    password: str
+
+
 # ── Register ───────────────────────────────────────────
 @router.post("/register", response_model=UserResponse, status_code=201)
 async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
@@ -50,12 +88,20 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     Create a new LexAI user account.
     Returns the created user (no token — user must login after registration).
     """
+    username = req.username.strip()
+    email = req.email.strip().lower()
+
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
     # Check username taken
-    if await get_user_by_username(db, req.username):
+    if await get_user_by_username_ci(db, username):
         raise HTTPException(status_code=400, detail="Username already taken")
 
     # Check email taken
-    if await get_user_by_email(db, req.email):
+    if await get_user_by_email_ci(db, email):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     # Enforce minimum password length
@@ -74,8 +120,8 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     try:
         user = await create_user(
             db,
-            username=req.username,
-            email=req.email,
+            username=username,
+            email=email,
             hashed_password=hashed_password,
         )
     except OperationalError as exc:
@@ -83,7 +129,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
             status_code=503,
             detail="Database is temporarily busy. Please retry in a moment.",
         ) from exc
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         user.id,
         "user_registered",
@@ -96,6 +142,46 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
 
 # ── Login ──────────────────────────────────────────────
+@router.post("/reset-password")
+async def reset_password(
+    req: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Local recovery helper for development mode.
+    Allows resetting a password by username or email without the old password.
+    """
+    identifier = req.identifier.strip()
+    if not identifier:
+        raise HTTPException(status_code=400, detail="Username or email is required")
+    if len(req.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    if len(req.password.encode("utf-8")) > MAX_PASSWORD_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Password must be at most {MAX_PASSWORD_BYTES} bytes",
+        )
+
+    user = await get_user_by_login_identifier(db, identifier)
+    if not user:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    try:
+        user.hashed_password = hash_password(req.password)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    await _try_create_activity_log(
+        db,
+        user.id,
+        "password_reset",
+        f"Password reset for {user.username}",
+        entity_type="user",
+        entity_id=user.id,
+    )
+    return {"message": "Password updated. Sign in with the new password."}
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(
     form: OAuth2PasswordRequestForm = Depends(),
@@ -105,7 +191,8 @@ async def login(
     Authenticate and return a JWT bearer token.
     Accepts standard OAuth2 form: username + password fields.
     """
-    user = await get_user_by_username(db, form.username)
+    identifier = form.username.strip()
+    user = await get_user_by_login_identifier(db, identifier)
     if not user or not verify_password(form.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,7 +203,7 @@ async def login(
         raise HTTPException(status_code=400, detail="Account is disabled")
 
     token = create_access_token({"sub": user.username})
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         user.id,
         "user_login",

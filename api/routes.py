@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.base_agent import BaseAgent
@@ -27,6 +28,7 @@ from db.models import User
 from middleware.rate_limit import limiter
 from pdf_exporter import generate_case_pdf
 from rag.knowledge_base import LegalKnowledgeBase
+from utils.logger import logger
 
 router = APIRouter(tags=["cases"])
 
@@ -127,6 +129,32 @@ def _settings_payload() -> dict[str, Any]:
         "reasoning_mode": "multi-agent-rag",
         "rule_based": False,
     }
+
+
+async def _try_create_activity_log(
+    db: AsyncSession,
+    user_id: str,
+    action: str,
+    description: str,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> None:
+    try:
+        await create_activity_log(
+            db,
+            user_id,
+            action,
+            description,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            metadata=metadata,
+        )
+    except OperationalError:
+        logger.warning(
+            f"Skipped activity log action={action} entity_type={entity_type} "
+            f"entity_id={entity_id} because the database was busy."
+        )
 
 
 def _validate_reasoning_profile(profile: str | None) -> str | None:
@@ -241,7 +269,7 @@ async def analyze_case(
         reasoning_profile=str(_runtime_settings["reasoning_profile"]),
     )
     await _persist_pipeline_result(db, case.id, result)
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "case_submitted",
@@ -263,7 +291,7 @@ async def analyze_case_stream(
 ) -> StreamingResponse:
     case_description = _validate_case_text(payload.case_description)
     case = await create_case(db, current_user.id, case_description, payload.title)
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "case_submitted",
@@ -355,7 +383,7 @@ async def get_case(
     case = await get_case_by_id(db, case_id)
     if not case or case.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Case not found")
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "case_loaded",
@@ -446,7 +474,7 @@ async def remove_case(
     deleted = await delete_case(db, case_id, current_user.id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Case not found")
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "case_deleted",
@@ -469,7 +497,7 @@ async def download_case_pdf(
         raise HTTPException(status_code=404, detail="Case not found")
 
     pdf_bytes = generate_case_pdf(case, _split_outputs(case))
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "report_downloaded",
@@ -513,7 +541,7 @@ async def save_knowledge_document(
         document = _knowledge_base.upsert_document(payload.model_dump(exclude_none=True))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "knowledge_updated",
@@ -537,7 +565,7 @@ async def delete_knowledge_document(
     deleted = _knowledge_base.delete_document(doc_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Knowledge document not found")
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "knowledge_deleted",
@@ -567,7 +595,7 @@ async def update_system_settings(
         updates["reasoning_profile"] = _validate_reasoning_profile(updates["reasoning_profile"])
     _runtime_settings.update(updates)
     saved = _save_runtime_settings(_runtime_settings)
-    await create_activity_log(
+    await _try_create_activity_log(
         db,
         current_user.id,
         "settings_updated",

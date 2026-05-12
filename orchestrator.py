@@ -64,6 +64,7 @@ class AgentOrchestrator:
                 defense,
                 prosecution,
                 verdict,
+                scoring,
                 style_hint,
             )
         return result
@@ -98,7 +99,15 @@ class AgentOrchestrator:
         yield "judge", verdict
 
         if include_appeals:
-            appeal = await self._appeals.run_structured(case, research, defense, prosecution, verdict, style_hint)
+            appeal = await self._appeals.run_structured(
+                case,
+                research,
+                defense,
+                prosecution,
+                verdict,
+                scoring,
+                style_hint,
+            )
             yield "appeals", appeal
 
     async def _run_research(
